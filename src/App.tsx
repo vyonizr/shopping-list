@@ -1,8 +1,8 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { Toaster } from 'sonner';
 import EverydayItems from './pages/EverydayItems';
 import ShoppingSession from './pages/ShoppingSession';
 import Navigation from './components/Navigation';
+import { Toaster } from './components/ui/sonner';
 
 function App() {
   return (
@@ -13,7 +13,7 @@ function App() {
           <Route path="/" element={<EverydayItems />} />
           <Route path="/shop" element={<ShoppingSession />} />
         </Routes>
-        <Toaster 
+        <Toaster
           position="bottom-center"
           toastOptions={{
             classNames: {
