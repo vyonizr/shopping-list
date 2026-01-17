@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Trash2, Edit2, Save, X, Upload, Search } from 'lucide-react';
+import { Trash2, Edit2, Save, X, Upload, Search, ChevronDown, ChevronRight } from 'lucide-react';
 
 export default function EverydayItems() {
   const [newItemName, setNewItemName] = useState('');
@@ -27,6 +27,7 @@ export default function EverydayItems() {
   const [editShowNewCategory, setEditShowNewCategory] = useState(false);
   const [editCustomCategory, setEditCustomCategory] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Query all items from IndexedDB
@@ -55,6 +56,23 @@ export default function EverydayItems() {
     acc[category].push(item);
     return acc;
   }, {} as Record<string, Item[]>);
+
+  // Initialize all categories as expanded on first render
+  if (expandedCategories.size === 0 && Object.keys(itemsByCategory).length > 0) {
+    setExpandedCategories(new Set(Object.keys(itemsByCategory)));
+  }
+
+  const toggleCategory = (category: string) => {
+    setExpandedCategories(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(category)) {
+        newSet.delete(category);
+      } else {
+        newSet.add(category);
+      }
+      return newSet;
+    });
+  };
 
   const handleAddItem = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -334,109 +352,130 @@ export default function EverydayItems() {
 
       {/* Items List Grouped by Category */}
       <div className="space-y-4 sm:space-y-6">
-        {Object.entries(itemsByCategory).sort().map(([category, categoryItems]) => (
-          <div key={category} className="bg-white rounded-lg shadow-md overflow-hidden">
-            <div className="bg-gray-50 px-4 sm:px-6 py-3 border-b">
-              <h3 className="text-lg sm:text-xl font-semibold text-gray-800">{category}</h3>
-              <p className="text-sm text-gray-500">{categoryItems.length} item{categoryItems.length !== 1 ? 's' : ''}</p>
-            </div>
-            <div className="divide-y divide-gray-100">
-              {categoryItems.map(item => (
-                <div
-                  key={item.id}
-                  className={`p-4 sm:p-5 transition-colors ${
-                    item.is_active ? 'bg-blue-50' : 'bg-white hover:bg-gray-50'
-                  }`}
-                >
-                  {editingId === item.id ? (
-                    <div className="space-y-3">
-                      <Input
-                        type="text"
-                        value={editName}
-                        onChange={(e) => setEditName(e.target.value)}
-                        placeholder="Item name"
-                      />
-                      {!editShowNewCategory ? (
-                        <div className="space-y-2">
-                          <Select value={editCategory} onValueChange={(value) => {
-                            if (value === '__new__') {
-                              setEditShowNewCategory(true);
-                              setEditCategory('');
-                            } else {
-                              setEditCategory(value);
-                            }
-                          }}>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select category..." />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {categories.map(cat => (
-                                <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                              ))}
-                              <SelectItem value="__new__" className="font-semibold text-blue-600">
-                                + Add New Category
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      ) : (
-                        <div className="space-y-2">
+        {Object.entries(itemsByCategory).sort().map(([category, categoryItems]) => {
+          const isExpanded = expandedCategories.has(category);
+          return (
+            <div key={category} className="bg-white rounded-lg shadow-md overflow-hidden">
+              <button
+                onClick={() => toggleCategory(category)}
+                className="w-full bg-gray-50 px-4 sm:px-6 py-3 border-b hover:bg-gray-100 transition-colors text-left"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    {isExpanded ? (
+                      <ChevronDown className="h-5 w-5 text-gray-600 shrink-0" />
+                    ) : (
+                      <ChevronRight className="h-5 w-5 text-gray-600 shrink-0" />
+                    )}
+                    <div className="min-w-0">
+                      <h3 className="text-lg sm:text-xl font-semibold text-gray-800">{category}</h3>
+                      <p className="text-sm text-gray-500">
+                        {categoryItems.length} item{categoryItems.length !== 1 ? 's' : ''}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </button>
+              {isExpanded && (
+                <div className="divide-y divide-gray-100">
+                  {categoryItems.map(item => (
+                    <div
+                      key={item.id}
+                      className={`p-4 sm:p-5 transition-colors ${
+                        item.is_active ? 'bg-blue-50' : 'bg-white hover:bg-gray-50'
+                      }`}
+                    >
+                      {editingId === item.id ? (
+                        <div className="space-y-3">
                           <Input
                             type="text"
-                            value={editCustomCategory}
-                            onChange={(e) => setEditCustomCategory(e.target.value)}
-                            placeholder="Enter new category"
+                            value={editName}
+                            onChange={(e) => setEditName(e.target.value)}
+                            placeholder="Item name"
                           />
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setEditShowNewCategory(false);
-                              setEditCustomCategory('');
-                            }}
-                            className="text-sm text-gray-600 hover:text-gray-800 underline"
-                          >
-                            ← Back to existing categories
-                          </button>
+                          {!editShowNewCategory ? (
+                            <div className="space-y-2">
+                              <Select value={editCategory} onValueChange={(value) => {
+                                if (value === '__new__') {
+                                  setEditShowNewCategory(true);
+                                  setEditCategory('');
+                                } else {
+                                  setEditCategory(value);
+                                }
+                              }}>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select category..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {categories.map(cat => (
+                                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                                  ))}
+                                  <SelectItem value="__new__" className="font-semibold text-blue-600">
+                                    + Add New Category
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          ) : (
+                            <div className="space-y-2">
+                              <Input
+                                type="text"
+                                value={editCustomCategory}
+                                onChange={(e) => setEditCustomCategory(e.target.value)}
+                                placeholder="Enter new category"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setEditShowNewCategory(false);
+                                  setEditCustomCategory('');
+                                }}
+                                className="text-sm text-gray-600 hover:text-gray-800 underline"
+                              >
+                                ← Back to existing categories
+                              </button>
+                            </div>
+                          )}
+                          <div className="flex gap-2">
+                            <Button onClick={handleSaveEdit} variant="default" className="flex-1 bg-green-600 hover:bg-green-700">
+                              <Save className="mr-2 h-4 w-4" />
+                              Save
+                            </Button>
+                            <Button onClick={handleCancelEdit} variant="secondary" className="flex-1">
+                              <X className="mr-2 h-4 w-4" />
+                              Cancel
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-start gap-3">
+                          <div className="flex items-start flex-1 min-w-0 pt-1">
+                            <Checkbox
+                              checked={item.is_active}
+                              onCheckedChange={() => handleToggleActive(item.id, item.is_active, item.name)}
+                              className="shrink-0"
+                            />
+                            <div className="ml-3 flex-1 min-w-0">
+                              <span className="text-base sm:text-lg text-gray-900 block">{item.name}</span>
+                            </div>
+                          </div>
+                          <div className="flex gap-2 shrink-0">
+                            <Button onClick={() => handleEdit(item)} variant="secondary" size="sm">
+                              <Edit2 className="h-4 w-4" />
+                            </Button>
+                            <Button onClick={() => handleDelete(item.id)} variant="destructive" size="sm">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       )}
-                      <div className="flex gap-2">
-                        <Button onClick={handleSaveEdit} variant="default" className="flex-1 bg-green-600 hover:bg-green-700">
-                          <Save className="mr-2 h-4 w-4" />
-                          Save
-                        </Button>
-                        <Button onClick={handleCancelEdit} variant="secondary" className="flex-1">
-                          <X className="mr-2 h-4 w-4" />
-                          Cancel
-                        </Button>
-                      </div>
                     </div>
-                  ) : (
-                    <div className="flex items-start gap-3">
-                      <div className="flex items-start flex-1 min-w-0 pt-1">
-                        <Checkbox
-                          checked={item.is_active}
-                          onCheckedChange={() => handleToggleActive(item.id, item.is_active, item.name)}
-                          className="shrink-0"
-                        />
-                        <div className="ml-3 flex-1 min-w-0">
-                          <span className="text-base sm:text-lg text-gray-900 block">{item.name}</span>
-                        </div>
-                      </div>
-                      <div className="flex gap-2 shrink-0">
-                        <Button onClick={() => handleEdit(item)} variant="secondary" size="sm">
-                          <Edit2 className="h-4 w-4" />
-                        </Button>
-                        <Button onClick={() => handleDelete(item.id)} variant="destructive" size="sm">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  )}
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {items.length === 0 && (
