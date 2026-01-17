@@ -1,73 +1,78 @@
-# React + TypeScript + Vite
+# Offline Shopping List PWA
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+An **offline-first shopping list web app** designed for deterministic behavior,
+local-only data storage, and frictionless cross-device transfer via copy–paste.
 
-Currently, two official plugins are available:
+No backend. No accounts. No sync servers.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+## Core Concept
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+The app separates **item definition** from **shopping execution**.
 
-## Expanding the ESLint configuration
+- **Page A (Everyday Items)**
+  - Define reusable items
+  - Assign categories
+  - Select items needed for a shopping trip
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- **Page B (Shopping Session)**
+  - Shows only selected items
+  - Tracks whether items are already in the cart
+  - Supports plain-text export (e.g. WhatsApp)
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+Both pages operate on the same local database using different projections.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+---
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## Features
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+- Offline-first (PWA)
+- Client-only persistence using IndexedDB
+- SQL-like querying via abstraction layer
+- Deterministic export/import via Base64 hash
+- Plain-text shopping list copy
+- Installable on desktop and mobile
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+---
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## Tech Stack
+
+- React + TypeScript
+- Vite
+- IndexedDB (Dexie.js)
+- Service Worker (PWA)
+
+No backend services are used or required.
+
+---
+
+## Routing
+
+| Route | Description |
+|------|------------|
+| `/` | Everyday Items (Page A) |
+| `/shop` | Shopping Session (Page B) |
+
+Routing controls **view selection only**.  
+No state is stored in URLs.
+
+---
+
+## Data Model (Simplified)
+
+```text
+Item
+- id
+- name
+- category
+- is_active
+
+ShoppingSession
+- id
+- created_at
+
+ShoppingItem
+- session_id
+- item_id
+- is_in_cart
