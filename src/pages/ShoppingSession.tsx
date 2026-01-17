@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import { Clipboard, Trash2, CheckCircle, ChevronDown, ChevronRight, Plus, Save, X, Pencil, Loader2 } from 'lucide-react';
+import { Clipboard, CheckCircle, ChevronDown, ChevronRight, Plus, Save, X, Pencil, Loader2 } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,7 +21,6 @@ import {
 export default function ShoppingSession() {
   const [inCartIds, setInCartIds] = useState<Set<number>>(new Set());
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
-  const [clearCartDialogOpen, setClearCartDialogOpen] = useState(false);
   const [completeSessionDialogOpen, setCompleteSessionDialogOpen] = useState(false);
   const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
   const [tempNote, setTempNote] = useState('');
@@ -87,16 +86,6 @@ export default function ShoppingSession() {
       }
       return newSet;
     });
-  };
-
-  const handleClearCart = () => {
-    setClearCartDialogOpen(true);
-  };
-
-  const confirmClearCart = () => {
-    setInCartIds(new Set());
-    setClearCartDialogOpen(false);
-    toast.success('Cart cleared');
   };
 
   const handleCompleteSession = () => {
@@ -233,22 +222,14 @@ export default function ShoppingSession() {
       ) : (
         <>
           {/* Action Buttons */}
-          <nav className="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Button
-              onClick={handleClearCart}
-              variant="default"
-              className="bg-amber-300 hover:bg-amber-400 text-amber-800"
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Clear Cart
-            </Button>
+          <nav className="mb-6">
             <Button
               onClick={handleCompleteSession}
               variant="default"
-              className="bg-blue-300 hover:bg-blue-400 text-blue-900"
+              className="w-full bg-blue-300 hover:bg-blue-400 text-blue-900"
             >
               <CheckCircle className="mr-2 h-4 w-4" />
-              Complete
+              Complete Session
             </Button>
           </nav>
 
@@ -412,26 +393,6 @@ export default function ShoppingSession() {
           </aside>
         </>
       )}
-
-      <AlertDialog open={clearCartDialogOpen} onOpenChange={setClearCartDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Clear Cart</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to clear all items from the cart? Items will remain selected for shopping.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmClearCart}
-              className="bg-amber-400 hover:bg-amber-500 text-amber-900"
-            >
-              Clear Cart
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       <AlertDialog open={completeSessionDialogOpen} onOpenChange={setCompleteSessionDialogOpen}>
         <AlertDialogContent>
