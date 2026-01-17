@@ -15,6 +15,16 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Trash2, Edit2, Save, X, Upload, Search, ChevronDown, ChevronRight } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 export default function EverydayItems() {
   const [newItemName, setNewItemName] = useState('');
@@ -28,6 +38,8 @@ export default function EverydayItems() {
   const [editCustomCategory, setEditCustomCategory] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<number | undefined>(undefined);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Query all items from IndexedDB
@@ -121,8 +133,18 @@ export default function EverydayItems() {
   };
 
   const handleDelete = async (id: number | undefined) => {
-    if (id !== undefined && confirm('Delete this item?')) {
-      await db.items.delete(id);
+    if (id !== undefined) {
+      setItemToDelete(id);
+      setDeleteDialogOpen(true);
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (itemToDelete !== undefined) {
+      await db.items.delete(itemToDelete);
+      setDeleteDialogOpen(false);
+      setItemToDelete(undefined);
+      toast.success('Item deleted successfully');
     }
   };
 
@@ -509,6 +531,26 @@ export default function EverydayItems() {
           </Button>
         </div>
       )}
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Item</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this item? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-rose-500 hover:bg-rose-600 text-white"
+            >
+              Delete
+            </AlertDialogAction>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

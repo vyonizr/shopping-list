@@ -6,10 +6,22 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Clipboard, Download, Trash2, CheckCircle, ChevronDown, ChevronRight } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 export default function ShoppingSession() {
   const [inCartIds, setInCartIds] = useState<Set<number>>(new Set());
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+  const [clearCartDialogOpen, setClearCartDialogOpen] = useState(false);
+  const [completeSessionDialogOpen, setCompleteSessionDialogOpen] = useState(false);
 
   // Query only active items (selected for shopping)
   const activeItems = useLiveQuery(async () => {
@@ -61,21 +73,28 @@ export default function ShoppingSession() {
   };
 
   const handleClearCart = () => {
-    if (confirm('Clear all items from cart?')) {
-      setInCartIds(new Set());
-    }
+    setClearCartDialogOpen(true);
   };
 
-  const handleCompleteSession = async () => {
-    if (confirm('Complete shopping session? This will deselect all items.')) {
-      // Deactivate all active items
-      await Promise.all(
-        activeItems.map(item => 
-          item.id ? db.items.update(item.id, { is_active: false }) : Promise.resolve()
-        )
-      );
-      setInCartIds(new Set());
-    }
+  const confirmClearCart = () => {
+    setInCartIds(new Set());
+    setClearCartDialogOpen(false);
+    toast.success('Cart cleared');
+  };
+
+  const handleCompleteSession = () => {
+    setCompleteSessionDialogOpen(true);
+  };
+
+  const confirmCompleteSession = async () => {
+    await Promise.all(
+      activeItems.map(item => 
+        item.id ? db.items.update(item.id, { is_active: false }) : Promise.resolve()
+      )
+    );
+    setInCartIds(new Set());
+    setCompleteSessionDialogOpen(false);
+    toast.success('Shopping session completed');
   };
 
   const generateWhatsAppText = () => {
@@ -97,7 +116,7 @@ export default function ShoppingSession() {
   const handleCopyToClipboard = () => {
     const text = generateWhatsAppText();
     navigator.clipboard.writeText(text).then(() => {
-      alert('Shopping list copied to clipboard!');
+      toast.success('Shopping list copied to clipboard!');
     });
   };
 
@@ -116,7 +135,7 @@ export default function ShoppingSession() {
     const exportString = `SHOPLIST_V1:${base64}`;
     
     navigator.clipboard.writeText(exportString).then(() => {
-      alert('Shopping list exported and copied to clipboard!');
+      toast.success('Shopping list exported and copied to clipboard!');
     });
   };
 
@@ -265,6 +284,46 @@ export default function ShoppingSession() {
           </div>
         </>
       )}
+
+      <AlertDialog open={clearCartDialogOpen} onOpenChange={setClearCartDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Clear Cart</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to clear all items from the cart? Items will remain selected for shopping.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmClearCart}
+              className="bg-amber-400 hover:bg-amber-500 text-amber-900"
+            >
+              Clear Cart
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={completeSessionDialogOpen} onOpenChange={setCompleteSessionDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Complete Shopping Session</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will deselect all items and clear your shopping session. Are you sure you want to continue?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmCompleteSession}
+              className="bg-blue-300 hover:bg-blue-400 text-blue-900"
+            >
+              Complete Session
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
