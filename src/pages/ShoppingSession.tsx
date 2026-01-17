@@ -5,7 +5,8 @@ import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Clipboard, Download, Trash2, CheckCircle, ChevronDown, ChevronRight } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Clipboard, Download, Trash2, CheckCircle, ChevronDown, ChevronRight, Plus, Save, X, Pencil } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,12 +23,24 @@ export default function ShoppingSession() {
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const [clearCartDialogOpen, setClearCartDialogOpen] = useState(false);
   const [completeSessionDialogOpen, setCompleteSessionDialogOpen] = useState(false);
+  const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
+  const [tempNote, setTempNote] = useState('');
 
   // Query only active items (selected for shopping)
   const activeItems = useLiveQuery(async () => {
     const allItems = await db.items.toArray();
     return allItems.filter(item => item.is_active);
   }) || [];
+
+  // Query session notes
+  const sessionNotes = useLiveQuery(async () => {
+    const notes = await db.sessionNotes.toArray();
+    const notesMap = new Map<number, string>();
+    notes.forEach(note => {
+      notesMap.set(note.item_id, note.note);
+    });
+    return notesMap;
+  }) || new Map<number, string>();
 
   // Group active items by category
   const itemsByCategory = activeItems.reduce((acc, item) => {
@@ -88,10 +101,12 @@ export default function ShoppingSession() {
 
   const confirmCompleteSession = async () => {
     await Promise.all(
-      activeItems.map(item => 
+      activeItems.map(item =>
         item.id ? db.items.update(item.id, { is_active: false }) : Promise.resolve()
       )
     );
+    // Clear all session notes
+    await db.sessionNotes.clear();
     setInCartIds(new Set());
     setCompleteSessionDialogOpen(false);
     toast.success('Shopping session completed');
@@ -130,10 +145,10 @@ export default function ShoppingSession() {
         inCart: inCartIds.has(item.id!)
       }))
     };
-    
+
     const base64 = btoa(JSON.stringify(exportData));
     const exportString = `SHOPLIST_V1:${base64}`;
-    
+
     navigator.clipboard.writeText(exportString).then(() => {
       toast.success('Shopping list exported and copied to clipboard!');
     });
@@ -141,6 +156,49 @@ export default function ShoppingSession() {
 
   const itemsInCart = activeItems.filter(item => inCartIds.has(item.id!)).length;
   const totalItems = activeItems.length;
+
+  const handleAddNote = async (id: number | undefined) => {
+    if (!id) return;
+    setEditingNoteId(id);
+    setTempNote(sessionNotes.get(id) || '');
+  };
+
+  const handleSaveNote = async (id: number | undefined) => {
+    if (!id) return;
+
+    if (tempNote.trim()) {
+      // Check if note already exists
+      const existingNote = await db.sessionNotes.where('item_id').equals(id).first();
+
+      if (existingNote) {
+        // Update existing note
+        await db.sessionNotes.update(existingNote.id!, { note: tempNote.trim() });
+      } else {
+        // Add new note
+        await db.sessionNotes.add({
+          item_id: id,
+          note: tempNote.trim(),
+          created_at: new Date().getTime()
+        });
+      }
+      toast.success('Note saved');
+    } else {
+      // Delete note if empty
+      const existingNote = await db.sessionNotes.where('item_id').equals(id).first();
+      if (existingNote) {
+        await db.sessionNotes.delete(existingNote.id!);
+        toast.info('Note removed');
+      }
+    }
+
+    setEditingNoteId(null);
+    setTempNote('');
+  };
+
+  const handleCancelNote = () => {
+    setEditingNoteId(null);
+    setTempNote('');
+  };
 
   return (
     <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
@@ -238,30 +296,102 @@ export default function ShoppingSession() {
                     <ul className="divide-y divide-gray-50">
                       {categoryItems.map(item => {
                         const isInCart = inCartIds.has(item.id!);
+                        const sessionNote = sessionNotes.get(item.id!);
+                        const isEditingNote = editingNoteId === item.id;
+
                         return (
                           <li
                             key={item.id}
-                            className={`p-4 sm:p-5 transition-all cursor-pointer ${ 
-                              isInCart 
-                                ? 'bg-gray-50' 
+                            className={`p-4 sm:p-5 transition-all ${
+                              isInCart
+                                ? 'bg-gray-50'
                                 : 'bg-white hover:bg-blue-50'
                             }`}
-                            onClick={() => handleToggleInCart(item.id, item.name)}
                           >
-                            <div className="flex items-start gap-3">
-                              <Checkbox
-                                checked={isInCart}
-                                onCheckedChange={() => handleToggleInCart(item.id, item.name)}
-                                className="shrink-0 mt-0.5 pointer-events-none"
-                              />
-                              <div className="flex-1 min-w-0">
-                                <span className={`text-base sm:text-lg block transition-all ${
-                                  isInCart ? 'line-through text-gray-400' : 'text-gray-700'
-                                }`}>
-                                  {item.name}
-                                </span>
+                            {isEditingNote ? (
+                              <div className="space-y-3" onClick={(e) => e.stopPropagation()}>
+                                <Input
+                                  type="text"
+                                  value={tempNote}
+                                  onChange={(e) => setTempNote(e.target.value)}
+                                  placeholder="Add a shopping note..."
+                                  className="text-sm"
+                                  autoFocus
+                                />
+                                <div className="flex gap-2">
+                                  <Button
+                                    onClick={() => handleSaveNote(item.id)}
+                                    size="sm"
+                                    className="bg-green-400 hover:bg-green-500 text-white"
+                                  >
+                                    <Save className="mr-1 h-3 w-3" />
+                                    Save
+                                  </Button>
+                                  <Button
+                                    onClick={handleCancelNote}
+                                    size="sm"
+                                    variant="secondary"
+                                    className="bg-gray-100 hover:bg-gray-200"
+                                  >
+                                    <X className="mr-1 h-3 w-3" />
+                                    Cancel
+                                  </Button>
+                                </div>
                               </div>
-                            </div>
+                            ) : (
+                              <div className="flex items-start gap-3">
+                                <Checkbox
+                                  checked={isInCart}
+                                  onCheckedChange={() => handleToggleInCart(item.id, item.name)}
+                                  className="shrink-0 mt-0.5"
+                                  onClick={(e) => e.stopPropagation()}
+                                />
+                                <div
+                                  className="flex-1 min-w-0 cursor-pointer"
+                                  onClick={() => handleToggleInCart(item.id, item.name)}
+                                >
+                                  <span className={`text-base sm:text-lg block transition-all ${
+                                    isInCart ? 'line-through text-gray-400' : 'text-gray-700'
+                                  }`}>
+                                    {item.name}
+                                  </span>
+                                  {sessionNote && (
+                                    <div className="mt-1.5 flex items-start gap-1">
+                                      <span className="text-xs text-gray-400">📝</span>
+                                      <span className={`text-sm transition-all ${
+                                        isInCart ? 'line-through text-gray-400' : 'text-gray-500'
+                                      }`}>
+                                        {sessionNote}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="flex gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
+                                  <Button
+                                    onClick={() => handleAddNote(item.id)}
+                                    variant="secondary"
+                                    size="sm"
+                                    className={`${
+                                      sessionNote
+                                        ? 'bg-blue-100 hover:bg-blue-200 text-blue-700'
+                                        : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                                    } border-0`}
+                                  >
+                                    {sessionNote ? (
+                                      <>
+                                        <Pencil className="mr-1 h-3 w-3" />
+                                        <span className="hidden sm:inline">Edit Note</span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Plus className="mr-1 h-3 w-3" />
+                                        <span className="hidden sm:inline">Add Note</span>
+                                      </>
+                                    )}
+                                  </Button>
+                                </div>
+                              </div>
+                            )}
                           </li>
                         );
                       })}
