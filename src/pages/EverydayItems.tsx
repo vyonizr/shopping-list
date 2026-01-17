@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Trash2, Edit2, Save, X, Upload, Search, ChevronDown, ChevronRight, Download, FileDown, FolderX } from 'lucide-react';
+import { Trash2, Edit2, Save, X, Upload, Search, ChevronDown, ChevronRight, Download, FileDown, FolderX, FolderEdit } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -47,6 +47,9 @@ export default function EverydayItems() {
   const [exportedData, setExportedData] = useState('');
   const [deleteCategoryDialogOpen, setDeleteCategoryDialogOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
+  const [renameCategoryDialogOpen, setRenameCategoryDialogOpen] = useState(false);
+  const [categoryToRename, setCategoryToRename] = useState<string | null>(null);
+  const [newCategoryName, setNewCategoryName] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Query all items from IndexedDB
@@ -362,6 +365,51 @@ export default function EverydayItems() {
     toast.success(`Category "${categoryToDelete}" and ${itemsToDelete.length} item${itemsToDelete.length !== 1 ? 's' : ''} deleted`);
   };
 
+  const handleRenameCategory = (category: string) => {
+    setCategoryToRename(category);
+    setNewCategoryName(category);
+    setRenameCategoryDialogOpen(true);
+  };
+
+  const confirmRenameCategory = async () => {
+    if (!categoryToRename || !newCategoryName.trim()) return;
+
+    const trimmedNewName = newCategoryName.trim();
+
+    // Check if new name is same as old name
+    if (trimmedNewName.toLowerCase() === categoryToRename.toLowerCase()) {
+      setRenameCategoryDialogOpen(false);
+      setCategoryToRename(null);
+      setNewCategoryName('');
+      return;
+    }
+
+    // Check if new category name already exists
+    const existingCategory = categories.find(
+      cat => cat.toLowerCase() === trimmedNewName.toLowerCase()
+    );
+
+    if (existingCategory) {
+      toast.error(`Category "${trimmedNewName}" already exists`);
+      return;
+    }
+
+    // Get all items in the category to rename
+    const itemsToUpdate = items.filter(item => item.category === categoryToRename);
+
+    // Update all items with new category name
+    await Promise.all(
+      itemsToUpdate.map(item =>
+        item.id ? db.items.update(item.id, { category: trimmedNewName }) : Promise.resolve()
+      )
+    );
+
+    setRenameCategoryDialogOpen(false);
+    setCategoryToRename(null);
+    setNewCategoryName('');
+    toast.success(`Category renamed from "${categoryToRename}" to "${trimmedNewName}"`);
+  };
+
   return (
     <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
       <header className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 sm:mb-8">
@@ -530,17 +578,30 @@ export default function EverydayItems() {
                       </p>
                     </div>
                   </div>
-                  <Button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteCategory(category);
-                    }}
-                    variant="ghost"
-                    size="sm"
-                    className="shrink-0 text-rose-600 hover:text-rose-700 hover:bg-rose-50"
-                  >
-                    <FolderX className="h-4 w-4" />
-                  </Button>
+                  <div className="flex gap-1 shrink-0">
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRenameCategory(category);
+                      }}
+                      variant="ghost"
+                      size="sm"
+                      className="text-blue-600 hover:text-blue-700 hover:bg-blue-100"
+                    >
+                      <FolderEdit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteCategory(category);
+                      }}
+                      variant="ghost"
+                      size="sm"
+                      className="text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+                    >
+                      <FolderX className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </button>
               {isExpanded && (
@@ -730,6 +791,43 @@ export default function EverydayItems() {
               className="bg-blue-500 hover:bg-blue-600 text-white"
             >
               Restore Items
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Rename Category Dialog */}
+      <AlertDialog open={renameCategoryDialogOpen} onOpenChange={setRenameCategoryDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Rename Category</AlertDialogTitle>
+            <AlertDialogDescription>
+              Enter a new name for the category <strong className="text-gray-900">"{categoryToRename}"</strong>.
+              <br />
+              All {itemsByCategory[categoryToRename || '']?.length || 0} item{itemsByCategory[categoryToRename || '']?.length !== 1 ? 's' : ''} will be moved to the new category.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="my-4">
+            <Input
+              type="text"
+              value={newCategoryName}
+              onChange={(e) => setNewCategoryName(e.target.value)}
+              placeholder="Enter new category name"
+              autoFocus
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setCategoryToRename(null);
+              setNewCategoryName('');
+            }}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmRenameCategory}
+              className="bg-blue-500 hover:bg-blue-600 text-white"
+            >
+              Rename Category
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
