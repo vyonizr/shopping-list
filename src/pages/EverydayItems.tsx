@@ -458,7 +458,7 @@ export default function EverydayItems() {
               )}
             </div>
           </div>
-          <Button type="submit" className="mt-6 w-full sm:w-auto bg-blue-300 hover:bg-blue-400 text-blue-900">
+          <Button type="submit" className="mt-6 w-full bg-blue-300 hover:bg-blue-400 text-blue-900">
             Add Item
           </Button>
         </form>
