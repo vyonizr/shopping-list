@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import { Clipboard, Download, Trash2, CheckCircle, ChevronDown, ChevronRight, Plus, Save, X, Pencil } from 'lucide-react';
+import { Clipboard, Trash2, CheckCircle, ChevronDown, ChevronRight, Plus, Save, X, Pencil } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -135,25 +135,6 @@ export default function ShoppingSession() {
     });
   };
 
-  const handleExportBase64 = () => {
-    const exportData = {
-      version: 'SHOPLIST_V1',
-      timestamp: new Date().getTime(),
-      items: activeItems.map(item => ({
-        name: item.name,
-        category: item.category,
-        inCart: inCartIds.has(item.id!)
-      }))
-    };
-
-    const base64 = btoa(JSON.stringify(exportData));
-    const exportString = `SHOPLIST_V1:${base64}`;
-
-    navigator.clipboard.writeText(exportString).then(() => {
-      toast.success('Shopping list exported and copied to clipboard!');
-    });
-  };
-
   const itemsInCart = activeItems.filter(item => inCartIds.has(item.id!)).length;
   const totalItems = activeItems.length;
 
@@ -231,15 +212,7 @@ export default function ShoppingSession() {
       ) : (
         <>
           {/* Action Buttons */}
-          <nav className="mb-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <Button
-              onClick={handleExportBase64}
-              variant="default"
-              className="bg-purple-400 hover:bg-purple-500 text-white"
-            >
-              <Download className="mr-2 h-4 w-4" />
-              Export
-            </Button>
+          <nav className="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Button
               onClick={handleClearCart}
               variant="default"
