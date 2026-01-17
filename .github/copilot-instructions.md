@@ -6,8 +6,8 @@ All guidance below is mandatory.
 ## Project Status
 
 - **Architecture**: Fully specified (see README.md)
-- **Implementation**: Bootstrap phase - Vite template in place, core features TBD
-- **Dependencies**: Add `dexie` when implementing IndexedDB layer
+- **Implementation**: Core features implemented with IndexedDB, routing, and both pages
+- **Design**: Mobile-first responsive UI with Tailwind CSS
 
 ## Architectural Constraints (Hard Rules)
 
@@ -108,9 +108,17 @@ interface Category {
 
 **Category Rules**:
 - Categories are **user-defined**, not hardcoded
-- Users can create new categories when adding/editing items
+- Use a **dropdown/datalist** showing existing categories with ability to type new category
+- Users can create new categories on-the-fly when adding/editing items
 - Derive category list from existing items OR maintain separate Category table
 - Display items grouped by category on both pages
+
+## UI/UX Requirements
+
+- **Mobile-first design**: Optimize for small screens, then enhance for larger displays
+- **Touch-friendly**: Minimum 44x44px touch targets for buttons and checkboxes
+- **Responsive layouts**: Use Tailwind's responsive utilities (sm:, md:, lg:)
+- **Category input**: Dropdown with existing categories + free-form text input for new ones
 
 ---
 

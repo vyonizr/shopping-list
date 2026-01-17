@@ -29,6 +29,8 @@ Both pages operate on the same local database using different projections.
 
 - Offline-first (PWA)
 - Client-only persistence using IndexedDB
+- Mobile-first responsive design
+- User-defined categories with dropdown autocomplete
 - SQL-like querying via abstraction layer
 - Deterministic export/import via Base64 hash
 - Plain-text shopping list copy
@@ -56,6 +58,20 @@ No backend services are used or required.
 
 Routing controls **view selection only**.  
 No state is stored in URLs.
+
+---
+
+## UI/UX Details
+
+**Category Selection:**
+- Dropdown list populated from existing categories
+- Allows free-form text input to create new categories
+- Uses HTML5 `<datalist>` for autocomplete functionality
+
+**Design Approach:**
+- Mobile-first responsive design
+- Touch-friendly interface (44x44px minimum touch targets)
+- Tailwind CSS for styling
 
 ---
 

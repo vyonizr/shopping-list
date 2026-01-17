@@ -1,35 +1,43 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import EverydayItems from './pages/EverydayItems';
+import ShoppingSession from './pages/ShoppingSession';
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <BrowserRouter>
+      <div className="min-h-screen bg-gray-50">
+        <nav className="bg-white shadow-sm border-b sticky top-0 z-10">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex h-14 sm:h-16">
+              <div className="flex w-full">
+                <Link
+                  to="/"
+                  className="flex-1 inline-flex items-center justify-center px-4 py-1 text-sm sm:text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 border-b-2 border-transparent hover:border-blue-600 transition-colors"
+                >
+                  <span className="mr-2">📝</span>
+                  <span>Items</span>
+                </Link>
+                <Link
+                  to="/shop"
+                  className="flex-1 inline-flex items-center justify-center px-4 py-1 text-sm sm:text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 border-b-2 border-transparent hover:border-blue-600 transition-colors"
+                >
+                  <span className="mr-2">🛒</span>
+                  <span>Shopping</span>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </nav>
+
+        <main className="pb-6">
+          <Routes>
+            <Route path="/" element={<EverydayItems />} />
+            <Route path="/shop" element={<ShoppingSession />} />
+          </Routes>
+        </main>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;
