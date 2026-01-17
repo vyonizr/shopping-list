@@ -5,10 +5,14 @@ All guidance below is mandatory.
 
 ## Project Status
 
-- **Architecture**: Fully specified (see README.md)
-- **Implementation**: Core features implemented with IndexedDB, routing, and both pages
-- **Design**: Mobile-first responsive UI with Tailwind CSS and shadcn/ui components
-- **Typography**: Serif fonts (Georgia, Times) applied globally
+- **Architecture**: Fully implemented and operational
+- **Implementation**: All core features complete
+  - Page A (Everyday Items): Item CRUD, categories, search, bulk operations, backup/restore
+  - Page B (Shopping Session): Cart tracking, session notes, WhatsApp export
+- **Database**: IndexedDB with Dexie.js, 3 tables (items, categories, sessionNotes)
+- **PWA**: Configured with vite-plugin-pwa, service worker active
+- **Design**: Mobile-first responsive UI with Tailwind CSS 4 and shadcn/ui components
+- **Typography**: Serif fonts (ui-serif, Georgia, Times) applied globally
 
 ## Architectural Constraints (Hard Rules)
 
@@ -95,22 +99,31 @@ npm run lint     # ESLint check
 - Never overload a boolean to represent multiple meanings.
 - Use explicit field names (`is_active`, `is_in_cart`) over generic flags.
 
-**Schema Pattern** (when implementing):
+**Actual Schema** (implemented in src/db/schema.ts):
 ```typescript
-// src/db/schema.ts
 interface Item {
-  id: string;
+  id?: number;         // Auto-incremented by Dexie
   name: string;
-  category: string;  // User-defined, free-form text
+  category: string;    // User-defined, free-form text
   is_active: boolean;  // Selected for current shopping trip
-  created_at: number;
+  created_at: number;  // Unix timestamp
 }
 
 interface Category {
-  id: string;
-  name: string;  // User creates categories on-the-fly
-  created_at: number;
+  id?: number;         // Auto-incremented by Dexie
+  name: string;        // User creates categories on-the-fly
+  created_at: number;  // Unix timestamp
 }
+
+interface SessionNote {
+  id?: number;         // Auto-incremented by Dexie
+  item_id: number;     // Foreign key to Item.id
+  note: string;        // User note during shopping session
+  created_at: number;  // Unix timestamp
+}
+
+// Database version 1: items, categories
+// Database version 2: added sessionNotes
 ```
 
 **Category Rules**:
@@ -131,22 +144,68 @@ interface Category {
 
 ## Export / Import Rules
 
-- Export format must be:
-  - **Deterministic** (same input = same output)
-  - **Versioned** (e.g., `SHOPLIST_V1:<base64>`)
-  - **Copy–paste friendly** (plain text, no special chars)
-- Use Base64 encoding for structured data export.
-- Implement version prefix for future compatibility.
+- **Implemented format**: `SHOPLIST_DB_V1_GZIP:<base64>`
+- Export process:
+  1. Serialize items to JSON
+  2. Compress using browser-native `CompressionStream` (gzip)
+  3. Base64 encode compressed data
+  4. Prepend version prefix
+- Import process:
+  1. Parse version prefix and validate
+  2. Base64 decode
+  3. Decompress using `DecompressionStream`
+  4. Parse JSON and validate structure
+  5. Clear existing items and import new ones
+- Version prefix enables future format compatibility
+- Compression utilities in `src/utils/compression.ts`
+- Export includes: version, timestamp, itemCount, items array
+- Session state (is_active, session notes) is NOT exported
 
 ---
 
 ## File Organization
 
-- `src/db/` - IndexedDB schema + Dexie setup
-- `src/components/` - Reusable React components
-- `src/pages/` - Route-level page components
-- `src/hooks/` - Custom hooks for DB queries
-- `public/` - Static assets (PWA manifest, icons)
+- `src/db/schema.ts` - IndexedDB schema with Dexie.js (3 tables)
+- `src/pages/EverydayItems.tsx` - Page A: Item management, categories, search, backup/restore
+- `src/pages/ShoppingSession.tsx` - Page B: Active shopping list, cart, notes, export
+- `src/components/Navigation.tsx` - Bottom navigation bar
+- `src/components/ui/` - shadcn/ui components (button, checkbox, input, label, select, alert-dialog, sonner)
+- `src/utils/compression.ts` - GZIP compression/decompression utilities
+- `src/lib/utils.ts` - Tailwind class merging utilities
+- `public/` - Static assets (icons, manifest)
+
+---
+
+## Implemented Features Reference
+
+### Page A: Everyday Items
+1. **Item Management**: Add, edit, delete items with duplicate detection
+2. **Categories**: User-defined categories with dropdown + free-form input
+3. **Selection**: Checkbox to mark items for shopping (`is_active` flag)
+4. **Search**: Real-time filter by item name or category
+5. **Bulk Operations**: Select All / Clear All buttons
+6. **Category Management**: Rename or delete entire categories
+7. **Collapsible Groups**: Expand/collapse categories with chevron icons
+8. **Backup/Restore**: Export/import database with GZIP compression
+9. **Toast Notifications**: User feedback for all operations
+10. **Loading States**: Spinners for async operations
+
+### Page B: Shopping Session
+1. **Active Items Only**: Displays items where `is_active = true`
+2. **In-Cart Tracking**: In-memory Set (not persisted to DB)
+3. **Session Notes**: Per-item notes stored in `sessionNotes` table
+4. **Progress Indicator**: "X / Y in cart" badge
+5. **WhatsApp Export**: Formatted plain text with emojis and categories
+6. **Complete Session**: Clears all `is_active` flags and session notes
+7. **Category Grouping**: Same collapsible UI as Page A
+
+### Technical Implementation
+- **IndexedDB**: 3 tables (items, categories, sessionNotes) via Dexie.js
+- **Live Queries**: `useLiveQuery` hook for reactive UI updates
+- **Optimistic UI**: Instant feedback with async DB writes
+- **Error Handling**: Try/catch blocks with toast error messages
+- **TypeScript**: Full type safety with Dexie EntityTable types
+- **Accessibility**: Semantic HTML, ARIA labels, keyboard navigation
 
 ---
 
