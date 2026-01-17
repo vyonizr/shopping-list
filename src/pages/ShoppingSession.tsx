@@ -138,7 +138,7 @@ export default function ShoppingSession() {
   const handleExportBase64 = () => {
     const exportData = {
       version: 'SHOPLIST_V1',
-      timestamp: Date.now(),
+      timestamp: new Date().getTime(),
       items: activeItems.map(item => ({
         name: item.name,
         category: item.category,
@@ -231,15 +231,7 @@ export default function ShoppingSession() {
       ) : (
         <>
           {/* Action Buttons */}
-          <nav className="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            <Button
-              onClick={handleCopyToClipboard}
-              variant="default"
-              className="bg-green-400 hover:bg-green-500 text-white"
-            >
-              <Clipboard className="mr-2 h-4 w-4" />
-              Copy List
-            </Button>
+          <nav className="mb-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
             <Button
               onClick={handleExportBase64}
               variant="default"
@@ -404,10 +396,21 @@ export default function ShoppingSession() {
 
           {/* WhatsApp Preview */}
           <aside className="mt-6 sm:mt-8 bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
-            <h3 className="text-lg font-semibold mb-3 sm:mb-4 flex items-center gap-2 text-gray-700">
-              <span>💬</span>
-              <span>WhatsApp Preview (Remaining Items)</span>
-            </h3>
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <h3 className="text-lg font-semibold flex items-center gap-2 text-gray-700">
+                <span>💬</span>
+                <span>WhatsApp Preview (Remaining Items)</span>
+              </h3>
+              <Button
+                onClick={handleCopyToClipboard}
+                variant="default"
+                size="sm"
+                className="bg-green-400 hover:bg-green-500 text-white"
+              >
+                <Clipboard className="mr-2 h-4 w-4" />
+                Copy
+              </Button>
+            </div>
             <pre className="bg-blue-50 p-4 rounded-lg border border-blue-100 text-sm whitespace-pre-wrap font-sans overflow-x-auto text-gray-700">
               {generateWhatsAppText()}
             </pre>
