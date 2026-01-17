@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import EverydayItems from './pages/EverydayItems';
 import ShoppingSession from './pages/ShoppingSession';
@@ -6,18 +6,24 @@ import Navigation from './components/Navigation';
 
 function App() {
   return (
-    <BrowserRouter>
+    <Router>
       <div className="min-h-screen bg-gray-50">
         <Navigation />
-        <main className="pb-6">
-          <Routes>
-            <Route path="/" element={<EverydayItems />} />
-            <Route path="/shop" element={<ShoppingSession />} />
-          </Routes>
-        </main>
+        <Routes>
+          <Route path="/" element={<EverydayItems />} />
+          <Route path="/shop" element={<ShoppingSession />} />
+        </Routes>
+        <Toaster 
+          position="bottom-center"
+          toastOptions={{
+            classNames: {
+              toast: 'mb-16 sm:mb-4',
+            },
+          }}
+          richColors
+        />
       </div>
-      <Toaster position="top-center" richColors />
-    </BrowserRouter>
+    </Router>
   );
 }
 
