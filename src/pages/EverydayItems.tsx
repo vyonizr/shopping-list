@@ -50,6 +50,7 @@ export default function EverydayItems() {
   const [categoryToRename, setCategoryToRename] = useState<string | null>(null);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isBulkOperationLoading, setIsBulkOperationLoading] = useState(false);
 
   // Query all items from IndexedDB
   const items = useLiveQuery(() => db.items.toArray()) || [];
@@ -397,30 +398,32 @@ export default function EverydayItems() {
   };
 
   const handleSelectAll = async () => {
-    setIsLoading(true);
+    setIsBulkOperationLoading(true);
     try {
+      const itemsToSelect = filteredItems.filter(item => !item.is_active);
       await Promise.all(
-        filteredItems.map(item =>
-          item.id && !item.is_active ? db.items.update(item.id, { is_active: true }) : Promise.resolve()
+        itemsToSelect.map(item =>
+          item.id ? db.items.update(item.id, { is_active: true }) : Promise.resolve()
         )
       );
-      toast.success(`${filteredItems.filter(item => !item.is_active).length} items selected for shopping`);
+      toast.success(`${itemsToSelect.length} items selected for shopping`);
     } finally {
-      setIsLoading(false);
+      setIsBulkOperationLoading(false);
     }
   };
 
   const handleClearAll = async () => {
-    setIsLoading(true);
+    setIsBulkOperationLoading(true);
     try {
+      const itemsToClear = filteredItems.filter(item => item.is_active);
       await Promise.all(
-        filteredItems.map(item =>
-          item.id && item.is_active ? db.items.update(item.id, { is_active: false }) : Promise.resolve()
+        itemsToClear.map(item =>
+          item.id ? db.items.update(item.id, { is_active: false }) : Promise.resolve()
         )
       );
-      toast.info(`${filteredItems.filter(item => item.is_active).length} items removed from shopping list`);
+      toast.info(`${itemsToClear.length} items removed from shopping list`);
     } finally {
-      setIsLoading(false);
+      setIsBulkOperationLoading(false);
     }
   };
 
@@ -569,9 +572,9 @@ export default function EverydayItems() {
                 variant="outline"
                 size="sm"
                 className="flex-1 border-green-200 text-green-600 hover:bg-green-50 hover:border-green-300"
-                disabled={isLoading}
+                disabled={isBulkOperationLoading}
               >
-                {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckSquare className="mr-2 h-4 w-4" />}
+                {isBulkOperationLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckSquare className="mr-2 h-4 w-4" />}
                 Select All
               </Button>
               <Button
@@ -579,197 +582,207 @@ export default function EverydayItems() {
                 variant="outline"
                 size="sm"
                 className="flex-1 border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300"
-                disabled={isLoading}
+                disabled={isBulkOperationLoading}
               >
-                {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Square className="mr-2 h-4 w-4" />}
+                {isBulkOperationLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Square className="mr-2 h-4 w-4" />}
                 Clear All
               </Button>
             </div>
           )}
 
-          {/* Items List Grouped by Category */}
-          <section className="space-y-4 sm:space-y-6">
-            {Object.entries(itemsByCategory).sort().map(([category, categoryItems]) => {
-              const isExpanded = expandedCategories.has(category);
-              return (
-                <article key={category} className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-                  <div
-                    onClick={() => toggleCategory(category)}
-                    className="w-full bg-blue-50 px-4 sm:px-6 py-3 border-b border-blue-100 hover:bg-blue-100 transition-colors text-left cursor-pointer"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 flex-1 min-w-0">
-                        {isExpanded ? (
-                          <ChevronDown className="h-5 w-5 text-blue-500 shrink-0" />
-                        ) : (
-                          <ChevronRight className="h-5 w-5 text-blue-500 shrink-0" />
-                        )}
-                        <div className="min-w-0">
-                          <h3 className="text-lg sm:text-xl font-semibold text-blue-700">{category}</h3>
-                          <p className="text-sm text-blue-400">
-                            {categoryItems.length} item{categoryItems.length !== 1 ? 's' : ''}
-                          </p>
+          {/* Bulk Operation Loading Overlay */}
+          {isBulkOperationLoading ? (
+            <section className="text-center py-16 sm:py-20">
+              <Loader2 className="mx-auto h-16 w-16 text-blue-500 animate-spin mb-4" />
+              <p className="text-lg text-gray-600">Updating items...</p>
+            </section>
+          ) : (
+            <>
+              {/* Items List Grouped by Category */}
+              <section className="space-y-4 sm:space-y-6">
+                {Object.entries(itemsByCategory).sort().map(([category, categoryItems]) => {
+                  const isExpanded = expandedCategories.has(category);
+                  return (
+                    <article key={category} className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+                      <div
+                        onClick={() => toggleCategory(category)}
+                        className="w-full bg-blue-50 px-4 sm:px-6 py-3 border-b border-blue-100 hover:bg-blue-100 transition-colors text-left cursor-pointer"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            {isExpanded ? (
+                              <ChevronDown className="h-5 w-5 text-blue-500 shrink-0" />
+                            ) : (
+                              <ChevronRight className="h-5 w-5 text-blue-500 shrink-0" />
+                            )}
+                            <div className="min-w-0">
+                              <h3 className="text-lg sm:text-xl font-semibold text-blue-700">{category}</h3>
+                              <p className="text-sm text-blue-400">
+                                {categoryItems.length} item{categoryItems.length !== 1 ? 's' : ''}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex gap-1 shrink-0">
+                            <Button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRenameCategory(category);
+                              }}
+                              variant="ghost"
+                              size="sm"
+                              className="text-blue-600 hover:text-blue-700 hover:bg-blue-100"
+                            >
+                              <FolderEdit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteCategory(category);
+                              }}
+                              variant="ghost"
+                              size="sm"
+                              className="text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+                            >
+                              <FolderX className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       </div>
-                      <div className="flex gap-1 shrink-0">
-                        <Button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleRenameCategory(category);
-                          }}
-                          variant="ghost"
-                          size="sm"
-                          className="text-blue-600 hover:text-blue-700 hover:bg-blue-100"
-                        >
-                          <FolderEdit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteCategory(category);
-                          }}
-                          variant="ghost"
-                          size="sm"
-                          className="text-rose-600 hover:text-rose-700 hover:bg-rose-50"
-                        >
-                          <FolderX className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                  {isExpanded && (
-                    <ul className="divide-y divide-gray-50">
-                      {categoryItems.map(item => (
-                        <li
-                          key={item.id}
-                          className={`p-4 sm:p-5 transition-colors cursor-pointer ${
-                            item.is_active ? 'bg-blue-50' : 'bg-white hover:bg-blue-50'
-                          }`}
-                          onClick={() => handleToggleActive(item.id, item.is_active, item.name)}
-                        >
-                          {editingId === item.id ? (
-                            <div className="space-y-3">
-                              <Input
-                                type="text"
-                                value={editName}
-                                onChange={(e) => setEditName(e.target.value)}
-                                placeholder="Item name"
-                              />
-                              {!editShowNewCategory ? (
-                                <div className="space-y-2">
-                                  <Select value={editCategory} onValueChange={(value) => {
-                                    if (value === '__new__') {
-                                      setEditShowNewCategory(true);
-                                      setEditCategory('');
-                                    } else {
-                                      setEditCategory(value);
-                                    }
-                                  }}>
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="Select category..." />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      {categories.map(cat => (
-                                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                                      ))}
-                                      <SelectItem value="__new__" className="font-semibold text-blue-600">
-                                        + Add New Category
-                                      </SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                              ) : (
-                                <div className="space-y-2">
+                      {isExpanded && (
+                        <ul className="divide-y divide-gray-50">
+                          {categoryItems.map(item => (
+                            <li
+                              key={item.id}
+                              className={`p-4 sm:p-5 transition-colors cursor-pointer ${
+                                item.is_active ? 'bg-blue-50' : 'bg-white hover:bg-blue-50'
+                              }`}
+                              onClick={() => handleToggleActive(item.id, item.is_active, item.name)}
+                            >
+                              {editingId === item.id ? (
+                                <div className="space-y-3">
                                   <Input
                                     type="text"
-                                    value={editCustomCategory}
-                                    onChange={(e) => setEditCustomCategory(e.target.value)}
-                                    placeholder="Enter new category"
+                                    value={editName}
+                                    onChange={(e) => setEditName(e.target.value)}
+                                    placeholder="Item name"
                                   />
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setEditShowNewCategory(false);
-                                      setEditCustomCategory('');
-                                    }}
-                                    className="text-sm text-gray-600 hover:text-gray-800 underline"
+                                  {!editShowNewCategory ? (
+                                    <div className="space-y-2">
+                                      <Select value={editCategory} onValueChange={(value) => {
+                                        if (value === '__new__') {
+                                          setEditShowNewCategory(true);
+                                          setEditCategory('');
+                                        } else {
+                                          setEditCategory(value);
+                                        }
+                                      }}>
+                                        <SelectTrigger>
+                                          <SelectValue placeholder="Select category..." />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          {categories.map(cat => (
+                                            <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                                          ))}
+                                          <SelectItem value="__new__" className="font-semibold text-blue-600">
+                                            + Add New Category
+                                          </SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                  ) : (
+                                    <div className="space-y-2">
+                                      <Input
+                                        type="text"
+                                        value={editCustomCategory}
+                                        onChange={(e) => setEditCustomCategory(e.target.value)}
+                                        placeholder="Enter new category"
+                                      />
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setEditShowNewCategory(false);
+                                          setEditCustomCategory('');
+                                        }}
+                                        className="text-sm text-gray-600 hover:text-gray-800 underline"
+                                      >
+                                        ← Back to existing categories
+                                      </button>
+                                    </div>
+                                  )}
+                                  <div className="flex gap-2">
+                                    <Button onClick={handleSaveEdit} variant="default" className="flex-1 bg-green-400 hover:bg-green-500 text-white" disabled={isLoading}>
+                                      {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                                      Save
+                                    </Button>
+                                    <Button onClick={handleCancelEdit} variant="secondary" className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700">
+                                      <X className="mr-2 h-4 w-4" />
+                                      Cancel
+                                    </Button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="flex items-start gap-3">
+                                  <div
+                                    className="flex items-start flex-1 min-w-0 pt-1"
+                                    onClick={() => handleToggleActive(item.id, item.is_active, item.name)}
                                   >
-                                    ← Back to existing categories
-                                  </button>
+                                    <Checkbox
+                                      checked={item.is_active}
+                                      onCheckedChange={() => handleToggleActive(item.id, item.is_active, item.name)}
+                                      className="shrink-0 pointer-events-none"
+                                    />
+                                    <div className="ml-3 flex-1 min-w-0">
+                                      <span className="text-base sm:text-lg text-gray-700 block">{item.name}</span>
+                                    </div>
+                                  </div>
+                                  <div className="flex gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
+                                    <Button onClick={() => handleEdit(item)} variant="secondary" size="sm" className="bg-amber-100 hover:bg-amber-200 text-amber-700 border-0">
+                                      <Edit2 className="h-4 w-4" />
+                                    </Button>
+                                    <Button onClick={() => handleDelete(item.id)} variant="destructive" size="sm" className="bg-rose-200 hover:bg-rose-300 text-rose-700">
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </div>
                                 </div>
                               )}
-                              <div className="flex gap-2">
-                                <Button onClick={handleSaveEdit} variant="default" className="flex-1 bg-green-400 hover:bg-green-500 text-white" disabled={isLoading}>
-                                  {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                                  Save
-                                </Button>
-                                <Button onClick={handleCancelEdit} variant="secondary" className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700">
-                                  <X className="mr-2 h-4 w-4" />
-                                  Cancel
-                                </Button>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="flex items-start gap-3">
-                              <div
-                                className="flex items-start flex-1 min-w-0 pt-1"
-                                onClick={() => handleToggleActive(item.id, item.is_active, item.name)}
-                              >
-                                <Checkbox
-                                  checked={item.is_active}
-                                  onCheckedChange={() => handleToggleActive(item.id, item.is_active, item.name)}
-                                  className="shrink-0 pointer-events-none"
-                                />
-                                <div className="ml-3 flex-1 min-w-0">
-                                  <span className="text-base sm:text-lg text-gray-700 block">{item.name}</span>
-                                </div>
-                              </div>
-                              <div className="flex gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
-                                <Button onClick={() => handleEdit(item)} variant="secondary" size="sm" className="bg-amber-100 hover:bg-amber-200 text-amber-700 border-0">
-                                  <Edit2 className="h-4 w-4" />
-                                </Button>
-                                <Button onClick={() => handleDelete(item.id)} variant="destructive" size="sm" className="bg-rose-200 hover:bg-rose-300 text-rose-700">
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </div>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </article>
-              );
-            })}
-          </section>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </article>
+                  );
+                })}
+              </section>
 
-          {items.length === 0 && (
-            <section className="text-center py-16 sm:py-20">
-              <div className="text-gray-400 mb-4">
-                <svg className="mx-auto h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-              </div>
-              <p className="text-lg text-gray-500 mb-2">No items yet</p>
-              <p className="text-sm text-gray-400">Add your first item above to get started!</p>
-            </section>
-          )}
+              {items.length === 0 && (
+                <section className="text-center py-16 sm:py-20">
+                  <div className="text-gray-400 mb-4">
+                    <svg className="mx-auto h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                  </div>
+                  <p className="text-lg text-gray-500 mb-2">No items yet</p>
+                  <p className="text-sm text-gray-400">Add your first item above to get started!</p>
+                </section>
+              )}
 
-          {items.length > 0 && filteredItems.length === 0 && (
-            <section className="text-center py-16 sm:py-20">
-              <div className="text-gray-400 mb-4">
-                <Search className="mx-auto h-16 w-16" />
-              </div>
-              <p className="text-lg text-gray-500 mb-2">No items found</p>
-              <p className="text-sm text-gray-400">Try a different search term</p>
-              <Button
-                onClick={() => setSearchQuery('')}
-                variant="outline"
-                className="mt-4"
-              >
-                Clear search
-              </Button>
-            </section>
+              {items.length > 0 && filteredItems.length === 0 && (
+                <section className="text-center py-16 sm:py-20">
+                  <div className="text-gray-400 mb-4">
+                    <Search className="mx-auto h-16 w-16" />
+                  </div>
+                  <p className="text-lg text-gray-500 mb-2">No items found</p>
+                  <p className="text-sm text-gray-400">Try a different search term</p>
+                  <Button
+                    onClick={() => setSearchQuery('')}
+                    variant="outline"
+                    className="mt-4"
+                  >
+                    Clear search
+                  </Button>
+                </section>
+              )}
+            </>
           )}
         </>
       )}
