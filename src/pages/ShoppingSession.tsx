@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type Item } from '../db/schema';
 import { toast } from 'sonner';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Clipboard, Download, Trash2, CheckCircle } from 'lucide-react';
@@ -127,9 +128,9 @@ export default function ShoppingSession() {
             Go to Everyday Items and select items to add them here.
           </p>
           <Button asChild>
-            <a href="/">
+            <Link to="/">
               Go to Everyday Items
-            </a>
+            </Link>
           </Button>
         </div>
       ) : (
