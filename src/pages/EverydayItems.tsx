@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type Item } from '../db/schema';
 import { toast } from 'sonner';
+import Papa from 'papaparse';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -13,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Trash2, Edit2, Save, X } from 'lucide-react';
+import { Trash2, Edit2, Save, X, Upload } from 'lucide-react';
 
 export default function EverydayItems() {
   const [newItemName, setNewItemName] = useState('');
@@ -25,10 +26,11 @@ export default function EverydayItems() {
   const [editCategory, setEditCategory] = useState('');
   const [editShowNewCategory, setEditShowNewCategory] = useState(false);
   const [editCustomCategory, setEditCustomCategory] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Query all items from IndexedDB
   const items = useLiveQuery(() => db.items.toArray()) || [];
-  
+
   // Get unique categories for dropdown
   const categories = useLiveQuery(async () => {
     const allItems = await db.items.toArray();
@@ -52,9 +54,22 @@ export default function EverydayItems() {
     e.preventDefault();
     if (!newItemName.trim()) return;
 
-    const categoryToUse = showNewCategoryInput 
+    const categoryToUse = showNewCategoryInput
       ? customCategory.trim() || 'Uncategorized'
       : newItemCategory || 'Uncategorized';
+
+    // Check for duplicate
+    const duplicate = await db.items
+      .filter(item =>
+        item.name.toLowerCase() === newItemName.trim().toLowerCase() &&
+        item.category.toLowerCase() === categoryToUse.toLowerCase()
+      )
+      .first();
+
+    if (duplicate) {
+      toast.error(`Item "${newItemName.trim()}" already exists in category "${categoryToUse}"`);
+      return;
+    }
 
     await db.items.add({
       name: newItemName.trim(),
@@ -67,6 +82,7 @@ export default function EverydayItems() {
     setNewItemCategory('');
     setCustomCategory('');
     setShowNewCategoryInput(false);
+    toast.success(`Item "${newItemName.trim()}" added successfully`);
   };
 
   const handleToggleActive = async (id: number | undefined, currentState: boolean, itemName: string) => {
@@ -101,6 +117,20 @@ export default function EverydayItems() {
         ? editCustomCategory.trim() || 'Uncategorized'
         : editCategory || 'Uncategorized';
 
+      // Check for duplicate (excluding current item)
+      const duplicate = await db.items
+        .filter(item =>
+          item.id !== editingId &&
+          item.name.toLowerCase() === editName.trim().toLowerCase() &&
+          item.category.toLowerCase() === categoryToUse.toLowerCase()
+        )
+        .first();
+
+      if (duplicate) {
+        toast.error(`Item "${editName.trim()}" already exists in category "${categoryToUse}"`);
+        return;
+      }
+
       await db.items.update(editingId, {
         name: editName.trim(),
         category: categoryToUse
@@ -110,6 +140,7 @@ export default function EverydayItems() {
       setEditCategory('');
       setEditShowNewCategory(false);
       setEditCustomCategory('');
+      toast.success('Item updated successfully');
     }
   };
 
@@ -121,9 +152,79 @@ export default function EverydayItems() {
     setEditCustomCategory('');
   };
 
+  const handleImportCSV = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: async (results) => {
+        try {
+          const data = results.data as Array<{ 'Item name'?: string; 'Kategori'?: string }>;
+
+          let imported = 0;
+          let skipped = 0;
+
+          for (const row of data) {
+            const itemName = row['Item name']?.trim();
+            const category = row['Kategori']?.trim();
+
+            if (itemName && category) {
+              await db.items.add({
+                name: itemName,
+                category: category,
+                is_active: false,
+                created_at: Date.now()
+              });
+              imported++;
+            } else {
+              skipped++;
+            }
+          }
+
+          toast.success(`Imported ${imported} items${skipped > 0 ? ` (${skipped} skipped)` : ''}`);
+
+          // Reset file input
+          if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+          }
+        } catch (error) {
+          toast.error('Error importing CSV. Please check the file format.');
+          console.error('CSV Import Error:', error);
+        }
+      },
+      error: () => {
+        toast.error('Failed to parse CSV file');
+      }
+    });
+  };
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-      <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 sm:mb-8">Everyday Items</h1>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Everyday Items</h1>
+
+        {/* Import CSV Button */}
+        <div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".csv"
+            onChange={handleImportCSV}
+            className="hidden"
+            id="csv-upload"
+          />
+          <Button
+            onClick={() => fileInputRef.current?.click()}
+            variant="outline"
+            className="w-full sm:w-auto"
+          >
+            <Upload className="mr-2 h-4 w-4" />
+            Import CSV
+          </Button>
+        </div>
+      </div>
 
       {/* Add New Item Form */}
       <form onSubmit={handleAddItem} className="mb-6 sm:mb-8 bg-white p-4 sm:p-6 rounded-lg shadow-md">
