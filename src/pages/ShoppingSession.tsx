@@ -192,7 +192,7 @@ export default function ShoppingSession() {
                           <Checkbox
                             checked={isInCart}
                             onCheckedChange={() => handleToggleInCart(item.id)}
-                            className="flex-shrink-0 mt-0.5"
+                            className="shrink-0 mt-0.5"
                           />
                           <div className="flex-1 min-w-0">
                             <span className={`text-base sm:text-lg block transition-all ${

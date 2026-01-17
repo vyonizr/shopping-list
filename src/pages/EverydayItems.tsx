@@ -69,19 +69,20 @@ export default function EverydayItems() {
   };
 
   const handleToggleActive = async (id: number | undefined, currentState: boolean) => {
-    if (id) {
+    if (id !== undefined) {
       await db.items.update(id, { is_active: !currentState });
     }
   };
 
   const handleDelete = async (id: number | undefined) => {
-    if (id && confirm('Delete this item?')) {
+    if (id !== undefined && confirm('Delete this item?')) {
       await db.items.delete(id);
     }
   };
 
   const handleEdit = (item: Item) => {
-    setEditingId(item.id!);
+    if (item.id === undefined) return;
+    setEditingId(item.id);
     setEditName(item.name);
     setEditCategory(item.category);
     setEditShowNewCategory(false);
@@ -89,7 +90,7 @@ export default function EverydayItems() {
   };
 
   const handleSaveEdit = async () => {
-    if (editingId && editName.trim()) {
+    if (editingId !== null && editName.trim()) {
       const categoryToUse = editShowNewCategory
         ? editCustomCategory.trim() || 'Uncategorized'
         : editCategory || 'Uncategorized';
@@ -274,7 +275,7 @@ export default function EverydayItems() {
                         <Checkbox
                           checked={item.is_active}
                           onCheckedChange={() => handleToggleActive(item.id, item.is_active)}
-                          className="flex-shrink-0"
+                          className="shrink-0"
                         />
                         <div className="ml-3 flex-1 min-w-0">
                           <span className="text-base sm:text-lg text-gray-900 block">{item.name}</span>
@@ -285,7 +286,7 @@ export default function EverydayItems() {
                           )}
                         </div>
                       </div>
-                      <div className="flex gap-2 flex-shrink-0">
+                      <div className="flex gap-2 shrink-0">
                         <Button onClick={() => handleEdit(item)} variant="secondary" size="sm">
                           <Edit2 className="h-4 w-4" />
                         </Button>
