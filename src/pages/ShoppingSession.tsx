@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type Item } from '../db/schema';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Clipboard, Download, Trash2, CheckCircle } from 'lucide-react';
 
 export default function ShoppingSession() {
   const [inCartIds, setInCartIds] = useState<Set<number>>(new Set());
@@ -119,45 +122,48 @@ export default function ShoppingSession() {
           <p className="text-sm text-gray-500 mb-6">
             Go to Everyday Items and select items to add them here.
           </p>
-          <a
-            href="/"
-            className="inline-block px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-          >
-            Go to Everyday Items
-          </a>
+          <Button asChild>
+            <a href="/">
+              Go to Everyday Items
+            </a>
+          </Button>
         </div>
       ) : (
         <>
           {/* Action Buttons */}
           <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            <button
+            <Button
               onClick={handleCopyToClipboard}
-              className="px-4 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors flex items-center justify-center gap-2"
+              variant="default"
+              className="bg-green-600 hover:bg-green-700"
             >
-              <span>📋</span>
-              <span>Copy List</span>
-            </button>
-            <button
+              <Clipboard className="mr-2 h-4 w-4" />
+              Copy List
+            </Button>
+            <Button
               onClick={handleExportBase64}
-              className="px-4 py-3 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-colors flex items-center justify-center gap-2"
+              variant="default"
+              className="bg-purple-600 hover:bg-purple-700"
             >
-              <span>📤</span>
-              <span>Export</span>
-            </button>
-            <button
+              <Download className="mr-2 h-4 w-4" />
+              Export
+            </Button>
+            <Button
               onClick={handleClearCart}
-              className="px-4 py-3 bg-yellow-600 text-white font-medium rounded-lg hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 transition-colors flex items-center justify-center gap-2"
+              variant="default"
+              className="bg-yellow-600 hover:bg-yellow-700"
             >
-              <span>🗑️</span>
-              <span>Clear Cart</span>
-            </button>
-            <button
+              <Trash2 className="mr-2 h-4 w-4" />
+              Clear Cart
+            </Button>
+            <Button
               onClick={handleCompleteSession}
-              className="px-4 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors flex items-center justify-center gap-2"
+              variant="default"
+              className="bg-blue-600 hover:bg-blue-700"
             >
-              <span>✓</span>
-              <span>Complete</span>
-            </button>
+              <CheckCircle className="mr-2 h-4 w-4" />
+              Complete
+            </Button>
           </div>
 
           {/* Shopping List by Category */}
@@ -183,11 +189,10 @@ export default function ShoppingSession() {
                         }`}
                       >
                         <label className="flex items-start gap-3 cursor-pointer">
-                          <input
-                            type="checkbox"
+                          <Checkbox
                             checked={isInCart}
-                            onChange={() => handleToggleInCart(item.id)}
-                            className="h-6 w-6 text-green-600 rounded border-gray-300 focus:ring-green-500 flex-shrink-0 cursor-pointer mt-0.5"
+                            onCheckedChange={() => handleToggleInCart(item.id)}
+                            className="flex-shrink-0 mt-0.5"
                           />
                           <div className="flex-1 min-w-0">
                             <span className={`text-base sm:text-lg block transition-all ${

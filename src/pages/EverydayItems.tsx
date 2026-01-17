@@ -1,6 +1,18 @@
 import { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type Item } from '../db/schema';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Trash2, Edit2, Save, X } from 'lucide-react';
 
 export default function EverydayItems() {
   const [newItemName, setNewItemName] = useState('');
@@ -111,52 +123,51 @@ export default function EverydayItems() {
         <h2 className="text-lg font-semibold mb-4">Add New Item</h2>
         <div className="space-y-4">
           <div>
-            <label htmlFor="itemName" className="block text-sm font-medium text-gray-700 mb-2">
+            <Label htmlFor="itemName" className="block text-sm font-medium text-gray-700 mb-2">
               Item Name *
-            </label>
-            <input
+            </Label>
+            <Input
               type="text"
               id="itemName"
               value={newItemName}
               onChange={(e) => setNewItemName(e.target.value)}
-              className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="e.g., Milk"
               required
             />
           </div>
           <div>
-            <label htmlFor="itemCategory" className="block text-sm font-medium text-gray-700 mb-2">
+            <Label htmlFor="itemCategory" className="block text-sm font-medium text-gray-700 mb-2">
               Category *
-            </label>
+            </Label>
             {!showNewCategoryInput ? (
               <div className="space-y-2">
-                <select
-                  id="itemCategory"
-                  value={newItemCategory}
-                  onChange={(e) => {
-                    if (e.target.value === '__new__') {
-                      setShowNewCategoryInput(true);
-                      setNewItemCategory('');
-                    } else {
-                      setNewItemCategory(e.target.value);
-                    }
-                  }}
-                  className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">Select a category...</option>
-                  {categories.map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
-                  <option value="__new__" className="font-semibold text-blue-600">+ Add New Category</option>
-                </select>
+                <Select value={newItemCategory} onValueChange={(value) => {
+                  if (value === '__new__') {
+                    setShowNewCategoryInput(true);
+                    setNewItemCategory('');
+                  } else {
+                    setNewItemCategory(value);
+                  }
+                }}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a category..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map(cat => (
+                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                    ))}
+                    <SelectItem value="__new__" className="font-semibold text-blue-600">
+                      + Add New Category
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             ) : (
               <div className="space-y-2">
-                <input
+                <Input
                   type="text"
                   value={customCategory}
                   onChange={(e) => setCustomCategory(e.target.value)}
-                  className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Enter new category name"
                   autoFocus
                 />
@@ -174,12 +185,9 @@ export default function EverydayItems() {
             )}
           </div>
         </div>
-        <button
-          type="submit"
-          className="mt-6 w-full sm:w-auto px-8 py-3 bg-blue-600 text-white text-base font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-        >
+        <Button type="submit" className="mt-6 w-full sm:w-auto">
           Add Item
-        </button>
+        </Button>
       </form>
 
       {/* Items List Grouped by Category */}
@@ -200,41 +208,41 @@ export default function EverydayItems() {
                 >
                   {editingId === item.id ? (
                     <div className="space-y-3">
-                      <input
+                      <Input
                         type="text"
                         value={editName}
                         onChange={(e) => setEditName(e.target.value)}
-                        className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="Item name"
                       />
                       {!editShowNewCategory ? (
                         <div className="space-y-2">
-                          <select
-                            value={editCategory}
-                            onChange={(e) => {
-                              if (e.target.value === '__new__') {
-                                setEditShowNewCategory(true);
-                                setEditCategory('');
-                              } else {
-                                setEditCategory(e.target.value);
-                              }
-                            }}
-                            className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          >
-                            <option value="">Select category...</option>
-                            {categories.map(cat => (
-                              <option key={cat} value={cat}>{cat}</option>
-                            ))}
-                            <option value="__new__" className="font-semibold text-blue-600">+ Add New Category</option>
-                          </select>
+                          <Select value={editCategory} onValueChange={(value) => {
+                            if (value === '__new__') {
+                              setEditShowNewCategory(true);
+                              setEditCategory('');
+                            } else {
+                              setEditCategory(value);
+                            }
+                          }}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select category..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {categories.map(cat => (
+                                <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                              ))}
+                              <SelectItem value="__new__" className="font-semibold text-blue-600">
+                                + Add New Category
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
                       ) : (
                         <div className="space-y-2">
-                          <input
+                          <Input
                             type="text"
                             value={editCustomCategory}
                             onChange={(e) => setEditCustomCategory(e.target.value)}
-                            className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                             placeholder="Enter new category"
                           />
                           <button
@@ -250,28 +258,23 @@ export default function EverydayItems() {
                         </div>
                       )}
                       <div className="flex gap-2">
-                        <button
-                          onClick={handleSaveEdit}
-                          className="flex-1 px-4 py-3 text-base font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors"
-                        >
+                        <Button onClick={handleSaveEdit} variant="default" className="flex-1 bg-green-600 hover:bg-green-700">
+                          <Save className="mr-2 h-4 w-4" />
                           Save
-                        </button>
-                        <button
-                          onClick={handleCancelEdit}
-                          className="flex-1 px-4 py-3 text-base font-medium bg-gray-500 text-white rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors"
-                        >
+                        </Button>
+                        <Button onClick={handleCancelEdit} variant="secondary" className="flex-1">
+                          <X className="mr-2 h-4 w-4" />
                           Cancel
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   ) : (
                     <div className="flex items-start gap-3">
                       <div className="flex items-start flex-1 min-w-0 pt-1">
-                        <input
-                          type="checkbox"
+                        <Checkbox
                           checked={item.is_active}
-                          onChange={() => handleToggleActive(item.id, item.is_active)}
-                          className="h-6 w-6 text-blue-600 rounded border-gray-300 focus:ring-blue-500 flex-shrink-0 cursor-pointer"
+                          onCheckedChange={() => handleToggleActive(item.id, item.is_active)}
+                          className="flex-shrink-0"
                         />
                         <div className="ml-3 flex-1 min-w-0">
                           <span className="text-base sm:text-lg text-gray-900 block">{item.name}</span>
@@ -283,18 +286,12 @@ export default function EverydayItems() {
                         </div>
                       </div>
                       <div className="flex gap-2 flex-shrink-0">
-                        <button
-                          onClick={() => handleEdit(item)}
-                          className="px-4 py-2 text-sm font-medium bg-gray-600 text-white rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDelete(item.id)}
-                          className="px-4 py-2 text-sm font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
-                        >
-                          Delete
-                        </button>
+                        <Button onClick={() => handleEdit(item)} variant="secondary" size="sm">
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                        <Button onClick={() => handleDelete(item.id)} variant="destructive" size="sm">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
                   )}

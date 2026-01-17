@@ -7,7 +7,8 @@ All guidance below is mandatory.
 
 - **Architecture**: Fully specified (see README.md)
 - **Implementation**: Core features implemented with IndexedDB, routing, and both pages
-- **Design**: Mobile-first responsive UI with Tailwind CSS
+- **Design**: Mobile-first responsive UI with Tailwind CSS and shadcn/ui components
+- **Typography**: Serif fonts (Georgia, Times) applied globally
 
 ## Architectural Constraints (Hard Rules)
 
@@ -30,11 +31,17 @@ Violations of these rules are considered bugs.
   - Generate manifest.json with app name, icons, theme colors
   - Service Worker must cache all app assets for offline use
 - Routing: Use `react-router-dom` (install when needed)
+- **UI Components**: shadcn/ui with Radix UI primitives
+  - Button, Checkbox, Input, Label, Select components in `src/components/ui/`
+  - Utility functions in `src/lib/utils.ts`
+  - Path aliases configured (`@/*` → `./src/*`)
+- **Typography**: Serif fonts (ui-serif, Georgia, Times) configured in Tailwind
 
 Do NOT introduce:
 - Redux, Zustand, MobX, or similar global state libraries
 - Backend APIs, authentication, or server dependencies
 - Analytics or telemetry
+- Other component libraries (Material-UI, Ant Design, etc.)
 
 ---
 
