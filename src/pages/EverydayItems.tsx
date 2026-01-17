@@ -25,6 +25,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { compressData, decompressData } from '@/utils/compression';
 
 export default function EverydayItems() {
   const [newItemName, setNewItemName] = useState('');
@@ -250,33 +251,6 @@ export default function EverydayItems() {
     });
   };
 
-  // Compression utilities
-  const compressData = async (data: string): Promise<string> => {
-    const stream = new Blob([data]).stream();
-    const compressedStream = stream.pipeThrough(new CompressionStream('gzip'));
-    const compressedBlob = await new Response(compressedStream).blob();
-    const buffer = await compressedBlob.arrayBuffer();
-    const bytes = new Uint8Array(buffer);
-    let binary = '';
-    for (let i = 0; i < bytes.length; i++) {
-      binary += String.fromCharCode(bytes[i]);
-    }
-    return btoa(binary);
-  };
-
-  const decompressData = async (base64: string): Promise<string> => {
-    const binary = atob(base64);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) {
-      bytes[i] = binary.charCodeAt(i);
-    }
-    const blob = new Blob([bytes]);
-    const stream = blob.stream();
-    const decompressedStream = stream.pipeThrough(new DecompressionStream('gzip'));
-    const decompressedBlob = await new Response(decompressedStream).blob();
-    return await decompressedBlob.text();
-  };
-
   const handleExportDatabase = async () => {
     try {
       const allItems = await db.items.toArray();
@@ -378,7 +352,7 @@ export default function EverydayItems() {
             className="border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-300"
           >
             <Download className="mr-2 h-4 w-4" />
-            Import DB
+            Restore
           </Button>
           <Button
             onClick={handleExportDatabase}
@@ -386,7 +360,7 @@ export default function EverydayItems() {
             className="border-green-200 text-green-600 hover:bg-green-50 hover:border-green-300"
           >
             <Upload className="mr-2 h-4 w-4" />
-            Export DB
+            Backup
           </Button>
           <input
             ref={fileInputRef}
@@ -673,9 +647,9 @@ export default function EverydayItems() {
       <AlertDialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
         <AlertDialogContent className="max-w-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle>Database Export</AlertDialogTitle>
+            <AlertDialogTitle>Backup Your Items</AlertDialogTitle>
             <AlertDialogDescription>
-              Copy the text below to backup your entire database. You can import this later to restore your data.
+              Copy the text below to save all your items. You can restore this backup later on any device.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="my-4">
@@ -702,16 +676,16 @@ export default function EverydayItems() {
       <AlertDialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
         <AlertDialogContent className="max-w-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle>Import Database</AlertDialogTitle>
+            <AlertDialogTitle>Restore Your Items</AlertDialogTitle>
             <AlertDialogDescription>
-              Paste your exported database below. <strong className="text-red-600">Warning:</strong> This will replace all existing items.
+              Paste your backup text below. <strong className="text-red-600">Warning:</strong> This will replace all current items with the backup.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="my-4">
             <textarea
               value={importData}
               onChange={(e) => setImportData(e.target.value)}
-              placeholder="Paste SHOPLIST_DB_V1_GZIP:... here"
+              placeholder="Paste your backup code here..."
               className="w-full h-32 p-3 border border-gray-300 rounded-lg font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -721,7 +695,7 @@ export default function EverydayItems() {
               onClick={confirmImport}
               className="bg-blue-500 hover:bg-blue-600 text-white"
             >
-              Import Database
+              Restore Items
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
