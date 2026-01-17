@@ -367,12 +367,12 @@ export default function ShoppingSession() {
             })}
           </section>
 
-          {/* WhatsApp Preview */}
+          {/* Shopping List Preview */}
           <aside className="mt-6 sm:mt-8 bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
             <div className="flex items-center justify-between mb-3 sm:mb-4">
               <h3 className="text-lg font-semibold flex items-center gap-2 text-gray-700">
-                <span>💬</span>
-                <span>WhatsApp Preview (Remaining Items)</span>
+                <span>📋</span>
+                <span>Remaining Items</span>
               </h3>
               <Button
                 onClick={handleCopyToClipboard}
