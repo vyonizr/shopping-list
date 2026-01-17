@@ -126,7 +126,10 @@ export default function ShoppingSession() {
       .map(([category, items]) => {
         const itemList = items
           .filter(item => !inCartIds.has(item.id!))
-          .map(item => `• ${item.name}`)
+          .map(item => {
+            const note = sessionNotes.get(item.id!);
+            return note ? `• ${item.name} (${note})` : `• ${item.name}`;
+          })
           .join('\n');
         return itemList ? `*${category}*\n${itemList}` : '';
       })
