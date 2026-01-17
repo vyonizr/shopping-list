@@ -5,10 +5,11 @@ import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Clipboard, Download, Trash2, CheckCircle } from 'lucide-react';
+import { Clipboard, Download, Trash2, CheckCircle, ChevronDown, ChevronRight } from 'lucide-react';
 
 export default function ShoppingSession() {
   const [inCartIds, setInCartIds] = useState<Set<number>>(new Set());
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
 
   // Query only active items (selected for shopping)
   const activeItems = useLiveQuery(async () => {
@@ -25,6 +26,23 @@ export default function ShoppingSession() {
     acc[category].push(item);
     return acc;
   }, {} as Record<string, Item[]>);
+
+  // Initialize all categories as expanded on first render
+  if (expandedCategories.size === 0 && Object.keys(itemsByCategory).length > 0) {
+    setExpandedCategories(new Set(Object.keys(itemsByCategory)));
+  }
+
+  const toggleCategory = (category: string) => {
+    setExpandedCategories(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(category)) {
+        newSet.delete(category);
+      } else {
+        newSet.add(category);
+      }
+      return newSet;
+    });
+  };
 
   const handleToggleInCart = (id: number | undefined, itemName: string) => {
     if (!id) return;
@@ -173,47 +191,66 @@ export default function ShoppingSession() {
 
           {/* Shopping List by Category */}
           <div className="space-y-4 sm:space-y-6">
-            {Object.entries(itemsByCategory).sort().map(([category, categoryItems]) => (
-              <div key={category} className="bg-white rounded-lg shadow-md overflow-hidden">
-                <div className="bg-gray-50 px-4 sm:px-6 py-3 border-b">
-                  <h3 className="text-lg sm:text-xl font-semibold text-gray-800">{category}</h3>
-                  <p className="text-sm text-gray-500">
-                    {categoryItems.filter(item => inCartIds.has(item.id!)).length} / {categoryItems.length} in cart
-                  </p>
-                </div>
-                <div className="divide-y divide-gray-100">
-                  {categoryItems.map(item => {
-                    const isInCart = inCartIds.has(item.id!);
-                    return (
-                      <div
-                        key={item.id}
-                        className={`p-4 sm:p-5 transition-all cursor-pointer ${ 
-                          isInCart 
-                            ? 'bg-gray-50' 
-                            : 'bg-white hover:bg-blue-50'
-                        }`}
-                        onClick={() => handleToggleInCart(item.id, item.name)}
-                      >
-                        <div className="flex items-start gap-3">
-                          <Checkbox
-                            checked={isInCart}
-                            onCheckedChange={() => handleToggleInCart(item.id, item.name)}
-                            className="shrink-0 mt-0.5 pointer-events-none"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <span className={`text-base sm:text-lg block transition-all ${
-                              isInCart ? 'line-through text-gray-400' : 'text-gray-900'
-                            }`}>
-                              {item.name}
-                            </span>
-                          </div>
+            {Object.entries(itemsByCategory).sort().map(([category, categoryItems]) => {
+              const isExpanded = expandedCategories.has(category);
+              return (
+                <div key={category} className="bg-white rounded-lg shadow-md overflow-hidden">
+                  <button
+                    onClick={() => toggleCategory(category)}
+                    className="w-full bg-gray-50 px-4 sm:px-6 py-3 border-b hover:bg-gray-100 transition-colors text-left"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        {isExpanded ? (
+                          <ChevronDown className="h-5 w-5 text-gray-600 shrink-0" />
+                        ) : (
+                          <ChevronRight className="h-5 w-5 text-gray-600 shrink-0" />
+                        )}
+                        <div className="min-w-0">
+                          <h3 className="text-lg sm:text-xl font-semibold text-gray-800">{category}</h3>
+                          <p className="text-sm text-gray-500">
+                            {categoryItems.filter(item => inCartIds.has(item.id!)).length} / {categoryItems.length} in cart
+                          </p>
                         </div>
                       </div>
-                    );
-                  })}
+                    </div>
+                  </button>
+                  {isExpanded && (
+                    <div className="divide-y divide-gray-100">
+                      {categoryItems.map(item => {
+                        const isInCart = inCartIds.has(item.id!);
+                        return (
+                          <div
+                            key={item.id}
+                            className={`p-4 sm:p-5 transition-all cursor-pointer ${ 
+                              isInCart 
+                                ? 'bg-gray-50' 
+                                : 'bg-white hover:bg-blue-50'
+                            }`}
+                            onClick={() => handleToggleInCart(item.id, item.name)}
+                          >
+                            <div className="flex items-start gap-3">
+                              <Checkbox
+                                checked={isInCart}
+                                onCheckedChange={() => handleToggleInCart(item.id, item.name)}
+                                className="shrink-0 mt-0.5 pointer-events-none"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <span className={`text-base sm:text-lg block transition-all ${
+                                  isInCart ? 'line-through text-gray-400' : 'text-gray-900'
+                                }`}>
+                                  {item.name}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* WhatsApp Preview */}
