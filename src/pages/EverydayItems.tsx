@@ -500,7 +500,7 @@ export default function EverydayItems() {
             <article key={category} className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
               <button
                 onClick={() => toggleCategory(category)}
-                className="w-full bg-blue-50 px-4 sm:px-6 py-3 border-b border-blue-100 hover:bg-blue-100 transition-colors text-left"
+                className="w-full bg-blue-50 px-4 sm:px-6 py-3 border-b border-blue-100 hover:bg-blue-100 transition-colors text-left cursor-pointer"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -547,9 +547,10 @@ export default function EverydayItems() {
                   {categoryItems.map(item => (
                     <li
                       key={item.id}
-                      className={`p-4 sm:p-5 transition-colors ${
+                      className={`p-4 sm:p-5 transition-colors cursor-pointer ${
                         item.is_active ? 'bg-blue-50' : 'bg-white hover:bg-blue-50'
                       }`}
+                      onClick={() => handleToggleActive(item.id, item.is_active, item.name)}
                     >
                       {editingId === item.id ? (
                         <div className="space-y-3">
@@ -616,7 +617,7 @@ export default function EverydayItems() {
                       ) : (
                         <div className="flex items-start gap-3">
                           <div
-                            className="flex items-start flex-1 min-w-0 pt-1 cursor-pointer"
+                            className="flex items-start flex-1 min-w-0 pt-1"
                             onClick={() => handleToggleActive(item.id, item.is_active, item.name)}
                           >
                             <Checkbox
