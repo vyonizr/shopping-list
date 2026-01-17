@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Trash2, Edit2, Save, X, Upload } from 'lucide-react';
+import { Trash2, Edit2, Save, X, Upload, Search } from 'lucide-react';
 
 export default function EverydayItems() {
   const [newItemName, setNewItemName] = useState('');
@@ -26,6 +26,7 @@ export default function EverydayItems() {
   const [editCategory, setEditCategory] = useState('');
   const [editShowNewCategory, setEditShowNewCategory] = useState(false);
   const [editCustomCategory, setEditCustomCategory] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Query all items from IndexedDB
@@ -40,8 +41,13 @@ export default function EverydayItems() {
     return uniqueCategories;
   }) || [];
 
+  // Filter items based on search query
+  const filteredItems = items.filter(item =>
+    item.name.toLowerCase().includes(searchQuery.toLowerCase().trim())
+  );
+
   // Group items by category
-  const itemsByCategory = items.reduce((acc, item) => {
+  const itemsByCategory = filteredItems.reduce((acc, item) => {
     const category = item.category || 'Uncategorized';
     if (!acc[category]) {
       acc[category] = [];
@@ -298,6 +304,34 @@ export default function EverydayItems() {
         </Button>
       </form>
 
+      {/* Search Bar */}
+      <div className="mb-6">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+          <Input
+            type="text"
+            placeholder="Search items..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          )}
+        </div>
+        {searchQuery && (
+          <p className="text-sm text-gray-500 mt-2">
+            Found {filteredItems.length} item{filteredItems.length !== 1 ? 's' : ''}
+          </p>
+        )}
+      </div>
+
       {/* Items List Grouped by Category */}
       <div className="space-y-4 sm:space-y-6">
         {Object.entries(itemsByCategory).sort().map(([category, categoryItems]) => (
@@ -414,6 +448,23 @@ export default function EverydayItems() {
           </div>
           <p className="text-lg text-gray-500 mb-2">No items yet</p>
           <p className="text-sm text-gray-400">Add your first item above to get started!</p>
+        </div>
+      )}
+
+      {items.length > 0 && filteredItems.length === 0 && (
+        <div className="text-center py-16 sm:py-20">
+          <div className="text-gray-400 mb-4">
+            <Search className="mx-auto h-16 w-16" />
+          </div>
+          <p className="text-lg text-gray-500 mb-2">No items found</p>
+          <p className="text-sm text-gray-400">Try a different search term</p>
+          <Button
+            onClick={() => setSearchQuery('')}
+            variant="outline"
+            className="mt-4"
+          >
+            Clear search
+          </Button>
         </div>
       )}
     </div>
