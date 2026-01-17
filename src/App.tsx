@@ -13,14 +13,14 @@ function App() {
               <div className="flex w-full">
                 <Link
                   to="/"
-                  className="flex-1 inline-flex items-center justify-center px-4 py-1 text-sm sm:text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 border-b-2 border-transparent hover:border-blue-600 transition-colors"
+                  className="flex-1 inline-flex items-center justify-center px-4 py-1 text-sm sm:text-base font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 border-b-2 border-transparent hover:border-blue-300 transition-colors"
                 >
                   <span className="mr-2">📝</span>
                   <span>Items</span>
                 </Link>
                 <Link
                   to="/shop"
-                  className="flex-1 inline-flex items-center justify-center px-4 py-1 text-sm sm:text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 border-b-2 border-transparent hover:border-blue-600 transition-colors"
+                  className="flex-1 inline-flex items-center justify-center px-4 py-1 text-sm sm:text-base font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 border-b-2 border-transparent hover:border-blue-300 transition-colors"
                 >
                   <span className="mr-2">🛒</span>
                   <span>Shopping</span>

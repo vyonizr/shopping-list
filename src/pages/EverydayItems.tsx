@@ -227,7 +227,7 @@ export default function EverydayItems() {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Everyday Items</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-700">Everyday Items</h1>
 
         {/* Import CSV Button */}
         <div>
@@ -242,7 +242,7 @@ export default function EverydayItems() {
           <Button
             onClick={() => fileInputRef.current?.click()}
             variant="outline"
-            className="w-full sm:w-auto"
+            className="w-full sm:w-auto border-purple-200 text-purple-600 hover:bg-purple-50 hover:border-purple-300"
           >
             <Upload className="mr-2 h-4 w-4" />
             Import CSV
@@ -251,8 +251,8 @@ export default function EverydayItems() {
       </div>
 
       {/* Add New Item Form */}
-      <form onSubmit={handleAddItem} className="mb-6 sm:mb-8 bg-white p-4 sm:p-6 rounded-lg shadow-md">
-        <h2 className="text-lg font-semibold mb-4">Add New Item</h2>
+      <form onSubmit={handleAddItem} className="mb-6 sm:mb-8 bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
+        <h2 className="text-lg font-semibold mb-4 text-gray-700">Add New Item</h2>
         <div className="space-y-4">
           <div>
             <Label htmlFor="itemName" className="block text-sm font-medium text-gray-700 mb-2">
@@ -317,7 +317,7 @@ export default function EverydayItems() {
             )}
           </div>
         </div>
-        <Button type="submit" className="mt-6 w-full sm:w-auto">
+        <Button type="submit" className="mt-6 w-full sm:w-auto bg-blue-300 hover:bg-blue-400 text-blue-900">
           Add Item
         </Button>
       </form>
@@ -355,21 +355,21 @@ export default function EverydayItems() {
         {Object.entries(itemsByCategory).sort().map(([category, categoryItems]) => {
           const isExpanded = expandedCategories.has(category);
           return (
-            <div key={category} className="bg-white rounded-lg shadow-md overflow-hidden">
+            <div key={category} className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
               <button
                 onClick={() => toggleCategory(category)}
-                className="w-full bg-gray-50 px-4 sm:px-6 py-3 border-b hover:bg-gray-100 transition-colors text-left"
+                className="w-full bg-blue-50 px-4 sm:px-6 py-3 border-b border-blue-100 hover:bg-blue-100 transition-colors text-left"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 flex-1 min-w-0">
                     {isExpanded ? (
-                      <ChevronDown className="h-5 w-5 text-gray-600 shrink-0" />
+                      <ChevronDown className="h-5 w-5 text-blue-500 shrink-0" />
                     ) : (
-                      <ChevronRight className="h-5 w-5 text-gray-600 shrink-0" />
+                      <ChevronRight className="h-5 w-5 text-blue-500 shrink-0" />
                     )}
                     <div className="min-w-0">
-                      <h3 className="text-lg sm:text-xl font-semibold text-gray-800">{category}</h3>
-                      <p className="text-sm text-gray-500">
+                      <h3 className="text-lg sm:text-xl font-semibold text-blue-700">{category}</h3>
+                      <p className="text-sm text-blue-400">
                         {categoryItems.length} item{categoryItems.length !== 1 ? 's' : ''}
                       </p>
                     </div>
@@ -377,12 +377,12 @@ export default function EverydayItems() {
                 </div>
               </button>
               {isExpanded && (
-                <div className="divide-y divide-gray-100">
+                <div className="divide-y divide-gray-50">
                   {categoryItems.map(item => (
                     <div
                       key={item.id}
                       className={`p-4 sm:p-5 transition-colors ${
-                        item.is_active ? 'bg-blue-50' : 'bg-white hover:bg-gray-50'
+                        item.is_active ? 'bg-blue-50' : 'bg-white hover:bg-blue-50'
                       }`}
                     >
                       {editingId === item.id ? (
@@ -437,11 +437,11 @@ export default function EverydayItems() {
                             </div>
                           )}
                           <div className="flex gap-2">
-                            <Button onClick={handleSaveEdit} variant="default" className="flex-1 bg-green-600 hover:bg-green-700">
+                            <Button onClick={handleSaveEdit} variant="default" className="flex-1 bg-green-400 hover:bg-green-500 text-white">
                               <Save className="mr-2 h-4 w-4" />
                               Save
                             </Button>
-                            <Button onClick={handleCancelEdit} variant="secondary" className="flex-1">
+                            <Button onClick={handleCancelEdit} variant="secondary" className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700">
                               <X className="mr-2 h-4 w-4" />
                               Cancel
                             </Button>
@@ -459,14 +459,14 @@ export default function EverydayItems() {
                               className="shrink-0 pointer-events-none"
                             />
                             <div className="ml-3 flex-1 min-w-0">
-                              <span className="text-base sm:text-lg text-gray-900 block">{item.name}</span>
+                              <span className="text-base sm:text-lg text-gray-700 block">{item.name}</span>
                             </div>
                           </div>
                           <div className="flex gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
-                            <Button onClick={() => handleEdit(item)} variant="secondary" size="sm">
+                            <Button onClick={() => handleEdit(item)} variant="secondary" size="sm" className="bg-amber-100 hover:bg-amber-200 text-amber-700 border-0">
                               <Edit2 className="h-4 w-4" />
                             </Button>
-                            <Button onClick={() => handleDelete(item.id)} variant="destructive" size="sm">
+                            <Button onClick={() => handleDelete(item.id)} variant="destructive" size="sm" className="bg-rose-200 hover:bg-rose-300 text-rose-700">
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
