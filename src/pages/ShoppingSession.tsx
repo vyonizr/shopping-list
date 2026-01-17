@@ -187,17 +187,18 @@ export default function ShoppingSession() {
                     return (
                       <div
                         key={item.id}
-                        className={`p-4 sm:p-5 transition-all ${ 
+                        className={`p-4 sm:p-5 transition-all cursor-pointer ${ 
                           isInCart 
                             ? 'bg-gray-50' 
                             : 'bg-white hover:bg-blue-50'
                         }`}
+                        onClick={() => handleToggleInCart(item.id, item.name)}
                       >
-                        <label className="flex items-start gap-3 cursor-pointer">
+                        <div className="flex items-start gap-3">
                           <Checkbox
                             checked={isInCart}
                             onCheckedChange={() => handleToggleInCart(item.id, item.name)}
-                            className="shrink-0 mt-0.5"
+                            className="shrink-0 mt-0.5 pointer-events-none"
                           />
                           <div className="flex-1 min-w-0">
                             <span className={`text-base sm:text-lg block transition-all ${
@@ -206,7 +207,7 @@ export default function ShoppingSession() {
                               {item.name}
                             </span>
                           </div>
-                        </label>
+                        </div>
                       </div>
                     );
                   })}

@@ -449,17 +449,20 @@ export default function EverydayItems() {
                         </div>
                       ) : (
                         <div className="flex items-start gap-3">
-                          <div className="flex items-start flex-1 min-w-0 pt-1">
+                          <div 
+                            className="flex items-start flex-1 min-w-0 pt-1 cursor-pointer"
+                            onClick={() => handleToggleActive(item.id, item.is_active, item.name)}
+                          >
                             <Checkbox
                               checked={item.is_active}
                               onCheckedChange={() => handleToggleActive(item.id, item.is_active, item.name)}
-                              className="shrink-0"
+                              className="shrink-0 pointer-events-none"
                             />
                             <div className="ml-3 flex-1 min-w-0">
                               <span className="text-base sm:text-lg text-gray-900 block">{item.name}</span>
                             </div>
                           </div>
-                          <div className="flex gap-2 shrink-0">
+                          <div className="flex gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
                             <Button onClick={() => handleEdit(item)} variant="secondary" size="sm">
                               <Edit2 className="h-4 w-4" />
                             </Button>
