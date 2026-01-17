@@ -7,7 +7,7 @@ function App() {
   return (
     <BrowserRouter>
       <div className="min-h-screen bg-gray-50">
-        <nav className="bg-white shadow-sm border-b sticky top-0 z-10">
+        <nav className="bg-white shadow-sm border-b sticky top-0 z-10" role="navigation" aria-label="Main navigation">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex h-14 sm:h-16">
               <div className="flex w-full">

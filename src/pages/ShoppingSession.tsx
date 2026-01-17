@@ -143,18 +143,18 @@ export default function ShoppingSession() {
   const totalItems = activeItems.length;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6 sm:mb-8">
+    <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <header className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6 sm:mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-700">Shopping Session</h1>
-        <div className="flex items-center gap-2 text-sm sm:text-base">
+        <aside className="flex items-center gap-2 text-sm sm:text-base">
           <div className="bg-blue-100 text-blue-700 px-3 py-1.5 rounded-full font-medium">
             {itemsInCart} / {totalItems} in cart
           </div>
-        </div>
-      </div>
+        </aside>
+      </header>
 
       {activeItems.length === 0 ? (
-        <div className="bg-white p-8 sm:p-12 rounded-lg shadow-sm border border-gray-100 text-center">
+        <section className="bg-white p-8 sm:p-12 rounded-lg shadow-sm border border-gray-100 text-center">
           <div className="text-gray-400 mb-4">
             <svg className="mx-auto h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
@@ -169,11 +169,11 @@ export default function ShoppingSession() {
               Go to Everyday Items
             </Link>
           </Button>
-        </div>
+        </section>
       ) : (
         <>
           {/* Action Buttons */}
-          <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <nav className="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <Button
               onClick={handleCopyToClipboard}
               variant="default"
@@ -206,14 +206,14 @@ export default function ShoppingSession() {
               <CheckCircle className="mr-2 h-4 w-4" />
               Complete
             </Button>
-          </div>
+          </nav>
 
           {/* Shopping List by Category */}
-          <div className="space-y-4 sm:space-y-6">
+          <section className="space-y-4 sm:space-y-6">
             {Object.entries(itemsByCategory).sort().map(([category, categoryItems]) => {
               const isExpanded = expandedCategories.has(category);
               return (
-                <div key={category} className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+                <article key={category} className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
                   <button
                     onClick={() => toggleCategory(category)}
                     className="w-full bg-blue-50 px-4 sm:px-6 py-3 border-b border-blue-100 hover:bg-blue-100 transition-colors text-left"
@@ -235,11 +235,11 @@ export default function ShoppingSession() {
                     </div>
                   </button>
                   {isExpanded && (
-                    <div className="divide-y divide-gray-50">
+                    <ul className="divide-y divide-gray-50">
                       {categoryItems.map(item => {
                         const isInCart = inCartIds.has(item.id!);
                         return (
-                          <div
+                          <li
                             key={item.id}
                             className={`p-4 sm:p-5 transition-all cursor-pointer ${ 
                               isInCart 
@@ -262,18 +262,18 @@ export default function ShoppingSession() {
                                 </span>
                               </div>
                             </div>
-                          </div>
+                          </li>
                         );
                       })}
-                    </div>
+                    </ul>
                   )}
-                </div>
+                </article>
               );
             })}
-          </div>
+          </section>
 
           {/* WhatsApp Preview */}
-          <div className="mt-6 sm:mt-8 bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
+          <aside className="mt-6 sm:mt-8 bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
             <h3 className="text-lg font-semibold mb-3 sm:mb-4 flex items-center gap-2 text-gray-700">
               <span>💬</span>
               <span>WhatsApp Preview (Remaining Items)</span>
@@ -281,7 +281,7 @@ export default function ShoppingSession() {
             <pre className="bg-blue-50 p-4 rounded-lg border border-blue-100 text-sm whitespace-pre-wrap font-sans overflow-x-auto text-gray-700">
               {generateWhatsAppText()}
             </pre>
-          </div>
+          </aside>
         </>
       )}
 
@@ -324,6 +324,6 @@ export default function ShoppingSession() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </main>
   );
 }

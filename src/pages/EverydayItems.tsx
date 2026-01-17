@@ -247,12 +247,12 @@ export default function EverydayItems() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 sm:mb-8">
+    <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <header className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 sm:mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-700">Everyday Items</h1>
 
         {/* Import CSV Button */}
-        <div>
+        <nav>
           <input
             ref={fileInputRef}
             type="file"
@@ -269,83 +269,85 @@ export default function EverydayItems() {
             <Upload className="mr-2 h-4 w-4" />
             Import CSV
           </Button>
-        </div>
-      </div>
+        </nav>
+      </header>
 
       {/* Add New Item Form */}
-      <form onSubmit={handleAddItem} className="mb-6 sm:mb-8 bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
-        <h2 className="text-lg font-semibold mb-4 text-gray-700">Add New Item</h2>
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="itemName" className="block text-sm font-medium text-gray-700 mb-2">
-              Item Name *
-            </Label>
-            <Input
-              type="text"
-              id="itemName"
-              value={newItemName}
-              onChange={(e) => setNewItemName(e.target.value)}
-              placeholder="e.g., Milk"
-              required
-            />
+      <section className="mb-6 sm:mb-8">
+        <form onSubmit={handleAddItem} className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
+          <h2 className="text-lg font-semibold mb-4 text-gray-700">Add New Item</h2>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="itemName" className="block text-sm font-medium text-gray-700 mb-2">
+                Item Name *
+              </Label>
+              <Input
+                type="text"
+                id="itemName"
+                value={newItemName}
+                onChange={(e) => setNewItemName(e.target.value)}
+                placeholder="e.g., Milk"
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="itemCategory" className="block text-sm font-medium text-gray-700 mb-2">
+                Category *
+              </Label>
+              {!showNewCategoryInput ? (
+                <div className="space-y-2">
+                  <Select value={newItemCategory} onValueChange={(value) => {
+                    if (value === '__new__') {
+                      setShowNewCategoryInput(true);
+                      setNewItemCategory('');
+                    } else {
+                      setNewItemCategory(value);
+                    }
+                  }}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a category..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map(cat => (
+                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                      ))}
+                      <SelectItem value="__new__" className="font-semibold text-blue-600">
+                        + Add New Category
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Input
+                    type="text"
+                    value={customCategory}
+                    onChange={(e) => setCustomCategory(e.target.value)}
+                    placeholder="Enter new category name"
+                    autoFocus
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowNewCategoryInput(false);
+                      setCustomCategory('');
+                    }}
+                    className="text-sm text-gray-600 hover:text-gray-800 underline"
+                  >
+                    ← Back to existing categories
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
-          <div>
-            <Label htmlFor="itemCategory" className="block text-sm font-medium text-gray-700 mb-2">
-              Category *
-            </Label>
-            {!showNewCategoryInput ? (
-              <div className="space-y-2">
-                <Select value={newItemCategory} onValueChange={(value) => {
-                  if (value === '__new__') {
-                    setShowNewCategoryInput(true);
-                    setNewItemCategory('');
-                  } else {
-                    setNewItemCategory(value);
-                  }
-                }}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a category..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map(cat => (
-                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                    ))}
-                    <SelectItem value="__new__" className="font-semibold text-blue-600">
-                      + Add New Category
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <Input
-                  type="text"
-                  value={customCategory}
-                  onChange={(e) => setCustomCategory(e.target.value)}
-                  placeholder="Enter new category name"
-                  autoFocus
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowNewCategoryInput(false);
-                    setCustomCategory('');
-                  }}
-                  className="text-sm text-gray-600 hover:text-gray-800 underline"
-                >
-                  ← Back to existing categories
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-        <Button type="submit" className="mt-6 w-full sm:w-auto bg-blue-300 hover:bg-blue-400 text-blue-900">
-          Add Item
-        </Button>
-      </form>
+          <Button type="submit" className="mt-6 w-full sm:w-auto bg-blue-300 hover:bg-blue-400 text-blue-900">
+            Add Item
+          </Button>
+        </form>
+      </section>
 
       {/* Search Bar */}
-      <div className="mb-6">
+      <section className="mb-6">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
           <Input
@@ -370,14 +372,14 @@ export default function EverydayItems() {
             Found {filteredItems.length} item{filteredItems.length !== 1 ? 's' : ''}
           </p>
         )}
-      </div>
+      </section>
 
       {/* Items List Grouped by Category */}
-      <div className="space-y-4 sm:space-y-6">
+      <section className="space-y-4 sm:space-y-6">
         {Object.entries(itemsByCategory).sort().map(([category, categoryItems]) => {
           const isExpanded = expandedCategories.has(category);
           return (
-            <div key={category} className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
+            <article key={category} className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
               <button
                 onClick={() => toggleCategory(category)}
                 className="w-full bg-blue-50 px-4 sm:px-6 py-3 border-b border-blue-100 hover:bg-blue-100 transition-colors text-left"
@@ -399,9 +401,9 @@ export default function EverydayItems() {
                 </div>
               </button>
               {isExpanded && (
-                <div className="divide-y divide-gray-50">
+                <ul className="divide-y divide-gray-50">
                   {categoryItems.map(item => (
-                    <div
+                    <li
                       key={item.id}
                       className={`p-4 sm:p-5 transition-colors ${
                         item.is_active ? 'bg-blue-50' : 'bg-white hover:bg-blue-50'
@@ -494,17 +496,17 @@ export default function EverydayItems() {
                           </div>
                         </div>
                       )}
-                    </div>
+                    </li>
                   ))}
-                </div>
+                </ul>
               )}
-            </div>
+            </article>
           );
         })}
-      </div>
+      </section>
 
       {items.length === 0 && (
-        <div className="text-center py-16 sm:py-20">
+        <section className="text-center py-16 sm:py-20">
           <div className="text-gray-400 mb-4">
             <svg className="mx-auto h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -512,11 +514,11 @@ export default function EverydayItems() {
           </div>
           <p className="text-lg text-gray-500 mb-2">No items yet</p>
           <p className="text-sm text-gray-400">Add your first item above to get started!</p>
-        </div>
+        </section>
       )}
 
       {items.length > 0 && filteredItems.length === 0 && (
-        <div className="text-center py-16 sm:py-20">
+        <section className="text-center py-16 sm:py-20">
           <div className="text-gray-400 mb-4">
             <Search className="mx-auto h-16 w-16" />
           </div>
@@ -529,7 +531,7 @@ export default function EverydayItems() {
           >
             Clear search
           </Button>
-        </div>
+        </section>
       )}
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -551,6 +553,6 @@ export default function EverydayItems() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </main>
   );
 }
