@@ -56,16 +56,27 @@ npm run dev      # Start dev server (http://localhost:5173)
 npm run build    # TypeScript check + production build
 npm run preview  # Preview production build locally
 npm run lint     # ESLint check
+npm test         # Run tests with Vitest
+npm run test:ui  # Run tests with Vitest UI
 ```
 
 ## Testing Strategy
 
-- **IndexedDB operations**: Test DB schema, CRUD operations, and query projections
-- **Offline scenarios**: Verify app loads and functions without network
-- **Export/import**: Test deterministic output and version compatibility
-- **Category handling**: User-defined categories must persist and display correctly
-- Use `@testing-library/react` for component tests
-- Mock IndexedDB with `fake-indexeddb` for unit tests
+- **Test Runner**: Vitest
+- **Component Testing**: `@testing-library/react` with React 19 support
+- **IndexedDB Mocking**: Use `fake-indexeddb` for unit tests
+- **Test Coverage**:
+  - IndexedDB operations: DB schema, CRUD operations, query projections
+  - Offline scenarios: Verify app loads and functions without network
+  - Export/import: Test deterministic output, compression, and version compatibility
+  - Category handling: User-defined categories must persist and display correctly
+  - Component behavior: User interactions, state updates, error handling
+- **Installation** (when needed):
+  ```bash
+  npm install -D vitest @testing-library/react @testing-library/jest-dom @testing-library/user-event fake-indexeddb jsdom
+  ```
+- **Configuration**: Add `vitest.config.ts` with jsdom environment and path aliases
+- **Test File Naming**: `*.test.ts`, `*.test.tsx` co-located with source files or in `__tests__` directories
 
 ## Routing Rules
 
