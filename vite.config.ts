@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { defineConfig } from 'vite'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
@@ -13,9 +14,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['vite.svg'],
       manifest: {
-        name: 'Offline Shopping List',
-        short_name: 'ShopList',
-        description: 'Offline-first shopping list Progressive Web App',
+        name: 'GoShop',
+        short_name: 'GoShop',
+        description: 'Offline-first shopping list app',
         theme_color: '#ffffff',
         background_color: '#ffffff',
         display: 'standalone',
@@ -53,4 +54,5 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  test: {}
 })

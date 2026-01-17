@@ -71,11 +71,6 @@ npm run test:ui  # Run tests with Vitest UI
   - Export/import: Test deterministic output, compression, and version compatibility
   - Category handling: User-defined categories must persist and display correctly
   - Component behavior: User interactions, state updates, error handling
-- **Installation** (when needed):
-  ```bash
-  npm install -D vitest @testing-library/react @testing-library/jest-dom @testing-library/user-event fake-indexeddb jsdom
-  ```
-- **Configuration**: Add `vitest.config.ts` with jsdom environment and path aliases
 - **Test File Naming**: `*.test.ts`, `*.test.tsx` co-located with source files or in `__tests__` directories
 
 ## Routing Rules
