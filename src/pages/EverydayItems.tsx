@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Trash2, Edit2, Save, X, Upload, Search, ChevronDown, ChevronRight } from 'lucide-react';
+import { Trash2, Edit2, Save, X, Upload, Search, ChevronDown, ChevronRight, Download, FileDown } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -40,6 +40,10 @@ export default function EverydayItems() {
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<number | undefined>(undefined);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [importData, setImportData] = useState('');
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
+  const [exportedData, setExportedData] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Query all items from IndexedDB
@@ -246,13 +250,115 @@ export default function EverydayItems() {
     });
   };
 
+  const handleExportDatabase = async () => {
+    try {
+      const allItems = await db.items.toArray();
+      const exportData = {
+        version: 'SHOPLIST_DB_V1',
+        timestamp: Date.now(),
+        itemCount: allItems.length,
+        items: allItems.map(item => ({
+          name: item.name,
+          category: item.category,
+          is_active: item.is_active,
+          created_at: item.created_at
+        }))
+      };
+
+      const base64 = btoa(JSON.stringify(exportData));
+      const exportString = `SHOPLIST_DB_V1:${base64}`;
+
+      setExportedData(exportString);
+      setExportDialogOpen(true);
+    } catch (error) {
+      toast.error('Failed to export database');
+      console.error('Export Error:', error);
+    }
+  };
+
+  const handleCopyExport = () => {
+    navigator.clipboard.writeText(exportedData).then(() => {
+      toast.success('Database export copied to clipboard!');
+      setExportDialogOpen(false);
+      setExportedData('');
+    });
+  };
+
+  const handleImportDatabase = () => {
+    setImportData('');
+    setImportDialogOpen(true);
+  };
+
+  const confirmImport = async () => {
+    try {
+      if (!importData.trim()) {
+        toast.error('Please paste the export data');
+        return;
+      }
+
+      // Parse the import string
+      const [version, base64Data] = importData.trim().split(':');
+
+      if (version !== 'SHOPLIST_DB_V1') {
+        toast.error('Invalid or unsupported export format');
+        return;
+      }
+
+      const jsonString = atob(base64Data);
+      const data = JSON.parse(jsonString);
+
+      if (!data.items || !Array.isArray(data.items)) {
+        toast.error('Invalid export data structure');
+        return;
+      }
+
+      // Clear existing items
+      await db.items.clear();
+
+      // Import items
+      let imported = 0;
+      for (const item of data.items) {
+        await db.items.add({
+          name: item.name,
+          category: item.category,
+          is_active: item.is_active || false,
+          created_at: item.created_at || Date.now()
+        });
+        imported++;
+      }
+
+      setImportDialogOpen(false);
+      setImportData('');
+      toast.success(`Successfully imported ${imported} items`);
+    } catch (error) {
+      toast.error('Failed to import database. Please check the data format.');
+      console.error('Import Error:', error);
+    }
+  };
+
   return (
     <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
       <header className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 sm:mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-700">Everyday Items</h1>
 
-        {/* Import CSV Button */}
-        <nav>
+        {/* Import/Export Buttons */}
+        <nav className="flex gap-2">
+          <Button
+            onClick={handleImportDatabase}
+            variant="outline"
+            className="border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-300"
+          >
+            <Download className="mr-2 h-4 w-4" />
+            Import DB
+          </Button>
+          <Button
+            onClick={handleExportDatabase}
+            variant="outline"
+            className="border-green-200 text-green-600 hover:bg-green-50 hover:border-green-300"
+          >
+            <Upload className="mr-2 h-4 w-4" />
+            Export DB
+          </Button>
           <input
             ref={fileInputRef}
             type="file"
@@ -264,9 +370,9 @@ export default function EverydayItems() {
           <Button
             onClick={() => fileInputRef.current?.click()}
             variant="outline"
-            className="w-full sm:w-auto border-purple-200 text-purple-600 hover:bg-purple-50 hover:border-purple-300"
+            className="border-purple-200 text-purple-600 hover:bg-purple-50 hover:border-purple-300"
           >
-            <Upload className="mr-2 h-4 w-4" />
+            <FileDown className="mr-2 h-4 w-4" />
             Import CSV
           </Button>
         </nav>
@@ -473,7 +579,7 @@ export default function EverydayItems() {
                         </div>
                       ) : (
                         <div className="flex items-start gap-3">
-                          <div 
+                          <div
                             className="flex items-start flex-1 min-w-0 pt-1 cursor-pointer"
                             onClick={() => handleToggleActive(item.id, item.is_active, item.name)}
                           >
@@ -534,6 +640,65 @@ export default function EverydayItems() {
         </section>
       )}
 
+      {/* Export Dialog */}
+      <AlertDialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
+        <AlertDialogContent className="max-w-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Database Export</AlertDialogTitle>
+            <AlertDialogDescription>
+              Copy the text below to backup your entire database. You can import this later to restore your data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="my-4">
+            <textarea
+              value={exportedData}
+              readOnly
+              className="w-full h-32 p-3 border border-gray-300 rounded-lg font-mono text-sm bg-gray-50"
+              onClick={(e) => e.currentTarget.select()}
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setExportedData('')}>Close</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleCopyExport}
+              className="bg-green-500 hover:bg-green-600 text-white"
+            >
+              Copy to Clipboard
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Import Dialog */}
+      <AlertDialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
+        <AlertDialogContent className="max-w-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Import Database</AlertDialogTitle>
+            <AlertDialogDescription>
+              Paste your exported database below. <strong className="text-red-600">Warning:</strong> This will replace all existing items.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="my-4">
+            <textarea
+              value={importData}
+              onChange={(e) => setImportData(e.target.value)}
+              placeholder="Paste SHOPLIST_DB_V1:... here"
+              className="w-full h-32 p-3 border border-gray-300 rounded-lg font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setImportData('')}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmImport}
+              className="bg-blue-500 hover:bg-blue-600 text-white"
+            >
+              Import Database
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
