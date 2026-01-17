@@ -250,6 +250,33 @@ export default function EverydayItems() {
     });
   };
 
+  // Compression utilities
+  const compressData = async (data: string): Promise<string> => {
+    const stream = new Blob([data]).stream();
+    const compressedStream = stream.pipeThrough(new CompressionStream('gzip'));
+    const compressedBlob = await new Response(compressedStream).blob();
+    const buffer = await compressedBlob.arrayBuffer();
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    for (let i = 0; i < bytes.length; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
+  };
+
+  const decompressData = async (base64: string): Promise<string> => {
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    const blob = new Blob([bytes]);
+    const stream = blob.stream();
+    const decompressedStream = stream.pipeThrough(new DecompressionStream('gzip'));
+    const decompressedBlob = await new Response(decompressedStream).blob();
+    return await decompressedBlob.text();
+  };
+
   const handleExportDatabase = async () => {
     try {
       const allItems = await db.items.toArray();
@@ -265,8 +292,9 @@ export default function EverydayItems() {
         }))
       };
 
-      const base64 = btoa(JSON.stringify(exportData));
-      const exportString = `SHOPLIST_DB_V1:${base64}`;
+      const jsonString = JSON.stringify(exportData);
+      const compressed = await compressData(jsonString);
+      const exportString = `SHOPLIST_DB_V1_GZIP:${compressed}`;
 
       setExportedData(exportString);
       setExportDialogOpen(true);
@@ -299,12 +327,13 @@ export default function EverydayItems() {
       // Parse the import string
       const [version, base64Data] = importData.trim().split(':');
 
-      if (version !== 'SHOPLIST_DB_V1') {
+      if (version !== 'SHOPLIST_DB_V1_GZIP') {
         toast.error('Invalid or unsupported export format');
         return;
       }
 
-      const jsonString = atob(base64Data);
+      // Decompress the data
+      const jsonString = await decompressData(base64Data);
       const data = JSON.parse(jsonString);
 
       if (!data.items || !Array.isArray(data.items)) {
@@ -682,7 +711,7 @@ export default function EverydayItems() {
             <textarea
               value={importData}
               onChange={(e) => setImportData(e.target.value)}
-              placeholder="Paste SHOPLIST_DB_V1:... here"
+              placeholder="Paste SHOPLIST_DB_V1_GZIP:... here"
               className="w-full h-32 p-3 border border-gray-300 rounded-lg font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
