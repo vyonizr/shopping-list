@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import { Clipboard, Trash2, CheckCircle, ChevronDown, ChevronRight, Plus, Save, X, Pencil } from 'lucide-react';
+import { Clipboard, Trash2, CheckCircle, ChevronDown, ChevronRight, Plus, Save, X, Pencil, Loader2 } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,6 +25,7 @@ export default function ShoppingSession() {
   const [completeSessionDialogOpen, setCompleteSessionDialogOpen] = useState(false);
   const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
   const [tempNote, setTempNote] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   // Query only active items (selected for shopping)
   const activeItems = useLiveQuery(async () => {
@@ -41,6 +42,9 @@ export default function ShoppingSession() {
     });
     return notesMap;
   }) || new Map<number, string>();
+
+  // Check if queries are still loading
+  const isQueryLoading = activeItems === undefined || sessionNotes === undefined;
 
   // Group active items by category
   const itemsByCategory = activeItems.reduce((acc, item) => {
@@ -100,16 +104,20 @@ export default function ShoppingSession() {
   };
 
   const confirmCompleteSession = async () => {
-    await Promise.all(
-      activeItems.map(item =>
-        item.id ? db.items.update(item.id, { is_active: false }) : Promise.resolve()
-      )
-    );
-    // Clear all session notes
-    await db.sessionNotes.clear();
-    setInCartIds(new Set());
-    setCompleteSessionDialogOpen(false);
-    toast.success('Shopping session completed');
+    setIsLoading(true);
+    try {
+      await Promise.all(
+        activeItems.map(item =>
+          item.id ? db.items.update(item.id, { is_active: false }) : Promise.resolve()
+        )
+      );
+      await db.sessionNotes.clear();
+      setInCartIds(new Set());
+      setCompleteSessionDialogOpen(false);
+      toast.success('Shopping session completed');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const generateWhatsAppText = () => {
@@ -145,35 +153,40 @@ export default function ShoppingSession() {
   };
 
   const handleSaveNote = async (id: number | undefined) => {
-    if (!id) return;
+    if (!id || isLoading) return;
 
-    if (tempNote.trim()) {
-      // Check if note already exists
-      const existingNote = await db.sessionNotes.where('item_id').equals(id).first();
+    setIsLoading(true);
+    try {
+      if (tempNote.trim()) {
+        // Check if note already exists
+        const existingNote = await db.sessionNotes.where('item_id').equals(id).first();
 
-      if (existingNote) {
-        // Update existing note
-        await db.sessionNotes.update(existingNote.id!, { note: tempNote.trim() });
+        if (existingNote) {
+          // Update existing note
+          await db.sessionNotes.update(existingNote.id!, { note: tempNote.trim() });
+        } else {
+          // Add new note
+          await db.sessionNotes.add({
+            item_id: id,
+            note: tempNote.trim(),
+            created_at: new Date().getTime()
+          });
+        }
+        toast.success('Note saved');
       } else {
-        // Add new note
-        await db.sessionNotes.add({
-          item_id: id,
-          note: tempNote.trim(),
-          created_at: new Date().getTime()
-        });
+        // Delete note if empty
+        const existingNote = await db.sessionNotes.where('item_id').equals(id).first();
+        if (existingNote) {
+          await db.sessionNotes.delete(existingNote.id!);
+          toast.info('Note removed');
+        }
       }
-      toast.success('Note saved');
-    } else {
-      // Delete note if empty
-      const existingNote = await db.sessionNotes.where('item_id').equals(id).first();
-      if (existingNote) {
-        await db.sessionNotes.delete(existingNote.id!);
-        toast.info('Note removed');
-      }
-    }
 
-    setEditingNoteId(null);
-    setTempNote('');
+      setEditingNoteId(null);
+      setTempNote('');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleCancelNote = () => {
@@ -192,7 +205,12 @@ export default function ShoppingSession() {
         </aside>
       </header>
 
-      {activeItems.length === 0 ? (
+      {isQueryLoading ? (
+        <section className="text-center py-16 sm:py-20">
+          <Loader2 className="mx-auto h-16 w-16 text-gray-400 animate-spin mb-4" />
+          <p className="text-lg text-gray-500">Loading shopping list...</p>
+        </section>
+      ) : activeItems.length === 0 ? (
         <section className="bg-white p-8 sm:p-12 rounded-lg shadow-sm border border-gray-100 text-center">
           <div className="text-gray-400 mb-4">
             <svg className="mx-auto h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -288,8 +306,9 @@ export default function ShoppingSession() {
                                     onClick={() => handleSaveNote(item.id)}
                                     size="sm"
                                     className="bg-green-400 hover:bg-green-500 text-white"
+                                    disabled={isLoading}
                                   >
-                                    <Save className="mr-1 h-3 w-3" />
+                                    {isLoading ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Save className="mr-1 h-3 w-3" />}
                                     Save
                                   </Button>
                                   <Button
@@ -424,7 +443,9 @@ export default function ShoppingSession() {
             <AlertDialogAction
               onClick={confirmCompleteSession}
               className="bg-blue-300 hover:bg-blue-400 text-blue-900"
+              disabled={isLoading}
             >
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Complete Session
             </AlertDialogAction>
           </AlertDialogFooter>
