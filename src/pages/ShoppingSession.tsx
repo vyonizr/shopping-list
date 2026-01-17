@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type Item } from '../db/schema';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Clipboard, Download, Trash2, CheckCircle } from 'lucide-react';
@@ -24,14 +25,17 @@ export default function ShoppingSession() {
     return acc;
   }, {} as Record<string, Item[]>);
 
-  const handleToggleInCart = (id: number | undefined) => {
+  const handleToggleInCart = (id: number | undefined, itemName: string) => {
     if (!id) return;
     setInCartIds(prev => {
       const newSet = new Set(prev);
-      if (newSet.has(id)) {
+      const wasInCart = newSet.has(id);
+      if (wasInCart) {
         newSet.delete(id);
+        toast.info(`${itemName} removed from cart`);
       } else {
         newSet.add(id);
+        toast.success(`${itemName} added to cart`);
       }
       return newSet;
     });
@@ -191,7 +195,7 @@ export default function ShoppingSession() {
                         <label className="flex items-start gap-3 cursor-pointer">
                           <Checkbox
                             checked={isInCart}
-                            onCheckedChange={() => handleToggleInCart(item.id)}
+                            onCheckedChange={() => handleToggleInCart(item.id, item.name)}
                             className="shrink-0 mt-0.5"
                           />
                           <div className="flex-1 min-w-0">
@@ -200,11 +204,6 @@ export default function ShoppingSession() {
                             }`}>
                               {item.name}
                             </span>
-                            {isInCart && (
-                              <span className="inline-block mt-1 text-xs font-medium text-green-600 bg-green-100 px-2 py-1 rounded">
-                                ✓ In Cart
-                              </span>
-                            )}
                           </div>
                         </label>
                       </div>

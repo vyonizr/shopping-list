@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type Item } from '../db/schema';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -68,9 +69,14 @@ export default function EverydayItems() {
     setShowNewCategoryInput(false);
   };
 
-  const handleToggleActive = async (id: number | undefined, currentState: boolean) => {
+  const handleToggleActive = async (id: number | undefined, currentState: boolean, itemName: string) => {
     if (id !== undefined) {
       await db.items.update(id, { is_active: !currentState });
+      if (!currentState) {
+        toast.success(`${itemName} selected for shopping`);
+      } else {
+        toast.info(`${itemName} removed from shopping list`);
+      }
     }
   };
 
@@ -274,16 +280,11 @@ export default function EverydayItems() {
                       <div className="flex items-start flex-1 min-w-0 pt-1">
                         <Checkbox
                           checked={item.is_active}
-                          onCheckedChange={() => handleToggleActive(item.id, item.is_active)}
+                          onCheckedChange={() => handleToggleActive(item.id, item.is_active, item.name)}
                           className="shrink-0"
                         />
                         <div className="ml-3 flex-1 min-w-0">
                           <span className="text-base sm:text-lg text-gray-900 block">{item.name}</span>
-                          {item.is_active && (
-                            <span className="inline-block mt-1 text-xs font-medium text-blue-600 bg-blue-100 px-2 py-1 rounded">
-                              ✓ Selected for shopping
-                            </span>
-                          )}
                         </div>
                       </div>
                       <div className="flex gap-2 shrink-0">

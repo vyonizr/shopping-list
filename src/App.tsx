@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import EverydayItems from './pages/EverydayItems';
 import ShoppingSession from './pages/ShoppingSession';
+import { Toaster } from '@/components/ui/sonner';
 
 function App() {
   return (
@@ -36,6 +37,7 @@ function App() {
           </Routes>
         </main>
       </div>
+      <Toaster />
     </BrowserRouter>
   );
 }
