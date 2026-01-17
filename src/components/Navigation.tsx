@@ -65,9 +65,6 @@ export default function Navigation() {
           </Link>
         </div>
       </nav>
-
-      {/* Mobile spacer to prevent content from being hidden behind bottom nav */}
-      <div className="sm:hidden h-16" />
     </>
   );
 }

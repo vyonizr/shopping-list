@@ -1,8 +1,7 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type Item } from '../db/schema';
 import { toast } from 'sonner';
-import Papa from 'papaparse';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -14,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Trash2, Edit2, Save, X, Upload, Search, ChevronDown, ChevronRight, Download, FileDown, FolderX, FolderEdit } from 'lucide-react';
+import { Trash2, Edit2, Save, X, Upload, Search, ChevronDown, ChevronRight, Download, FolderX, FolderEdit } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -50,7 +49,6 @@ export default function EverydayItems() {
   const [renameCategoryDialogOpen, setRenameCategoryDialogOpen] = useState(false);
   const [categoryToRename, setCategoryToRename] = useState<string | null>(null);
   const [newCategoryName, setNewCategoryName] = useState('');
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Query all items from IndexedDB
   const items = useLiveQuery(() => db.items.toArray()) || [];
@@ -210,54 +208,6 @@ export default function EverydayItems() {
     setEditCategory('');
     setEditShowNewCategory(false);
     setEditCustomCategory('');
-  };
-
-  const handleImportCSV = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: async (results) => {
-        try {
-          const data = results.data as Array<{ 'Item name'?: string; 'Kategori'?: string }>;
-
-          let imported = 0;
-          let skipped = 0;
-
-          for (const row of data) {
-            const itemName = row['Item name']?.trim();
-            const category = row['Kategori']?.trim();
-
-            if (itemName && category) {
-              await db.items.add({
-                name: itemName,
-                category: category,
-                is_active: false,
-                created_at: Date.now()
-              });
-              imported++;
-            } else {
-              skipped++;
-            }
-          }
-
-          toast.success(`Imported ${imported} items${skipped > 0 ? ` (${skipped} skipped)` : ''}`);
-
-          // Reset file input
-          if (fileInputRef.current) {
-            fileInputRef.current.value = '';
-          }
-        } catch (error) {
-          toast.error('Error importing CSV. Please check the file format.');
-          console.error('CSV Import Error:', error);
-        }
-      },
-      error: () => {
-        toast.error('Failed to parse CSV file');
-      }
-    });
   };
 
   const handleExportDatabase = async () => {
@@ -436,22 +386,6 @@ export default function EverydayItems() {
           >
             <Upload className="mr-2 h-4 w-4" />
             Backup
-          </Button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".csv"
-            onChange={handleImportCSV}
-            className="hidden"
-            id="csv-upload"
-          />
-          <Button
-            onClick={() => fileInputRef.current?.click()}
-            variant="outline"
-            className="border-purple-200 text-purple-600 hover:bg-purple-50 hover:border-purple-300"
-          >
-            <FileDown className="mr-2 h-4 w-4" />
-            Import CSV
           </Button>
         </nav>
       </header>
