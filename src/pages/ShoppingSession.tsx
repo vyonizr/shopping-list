@@ -255,7 +255,7 @@ export default function ShoppingSession() {
               const isExpanded = expandedCategories.has(category);
               return (
                 <article key={category} className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-                  <button
+                  <div
                     onClick={() => toggleCategory(category)}
                     className="w-full bg-blue-50 px-4 sm:px-6 py-3 border-b border-blue-100 hover:bg-blue-100 transition-colors text-left"
                   >
@@ -274,7 +274,7 @@ export default function ShoppingSession() {
                         </div>
                       </div>
                     </div>
-                  </button>
+                  </div>
                   {isExpanded && (
                     <ul className="divide-y divide-gray-50">
                       {categoryItems.map(item => {
