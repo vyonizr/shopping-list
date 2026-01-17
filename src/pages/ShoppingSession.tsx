@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type Item } from '../db/schema';
 import { toast } from 'sonner';
@@ -56,9 +56,11 @@ export default function ShoppingSession() {
   }, {} as Record<string, Item[]>);
 
   // Initialize all categories as expanded on first render
-  if (expandedCategories.size === 0 && Object.keys(itemsByCategory).length > 0) {
-    setExpandedCategories(new Set(Object.keys(itemsByCategory)));
-  }
+  useEffect(() => {
+    if (expandedCategories.size === 0 && Object.keys(itemsByCategory).length > 0) {
+      setExpandedCategories(new Set(Object.keys(itemsByCategory)));
+    }
+  }, [itemsByCategory, expandedCategories.size]);
 
   const toggleCategory = (category: string) => {
     setExpandedCategories(prev => {
@@ -74,18 +76,28 @@ export default function ShoppingSession() {
 
   const handleToggleInCart = (id: number | undefined, itemName: string) => {
     if (!id) return;
+    
+    const wasInCart = inCartIds.has(id);
+    
+    // Update state immediately for instant UI feedback
     setInCartIds(prev => {
       const newSet = new Set(prev);
-      const wasInCart = newSet.has(id);
       if (wasInCart) {
         newSet.delete(id);
-        toast.info(`${itemName} removed from cart`);
       } else {
         newSet.add(id);
-        toast.success(`${itemName} added to cart`);
       }
       return newSet;
     });
+    
+    // Show toast asynchronously to prevent blocking
+    setTimeout(() => {
+      if (wasInCart) {
+        toast.info(`${itemName} removed from cart`);
+      } else {
+        toast.success(`${itemName} added to cart`);
+      }
+    }, 0);
   };
 
   const handleCompleteSession = () => {
@@ -314,10 +326,7 @@ export default function ShoppingSession() {
                                   className="shrink-0 mt-0.5"
                                   onClick={(e) => e.stopPropagation()}
                                 />
-                                <div
-                                  className="flex-1 min-w-0 cursor-pointer"
-                                  onClick={() => handleToggleInCart(item.id, item.name)}
-                                >
+                                <div className="flex-1 min-w-0 cursor-pointer">
                                   <span className={`text-base sm:text-lg block transition-all ${
                                     isInCart ? 'line-through text-gray-400' : 'text-gray-700'
                                   }`}>

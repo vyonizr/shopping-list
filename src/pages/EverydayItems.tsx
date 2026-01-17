@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type Item } from '../db/schema';
 import { toast } from 'sonner';
@@ -87,9 +87,11 @@ export default function EverydayItems() {
   }, {} as Record<string, Item[]>);
 
   // Initialize all categories as expanded on first render
-  if (expandedCategories.size === 0 && Object.keys(itemsByCategory).length > 0) {
-    setExpandedCategories(new Set(Object.keys(itemsByCategory)));
-  }
+  useEffect(() => {
+    if (expandedCategories.size === 0 && Object.keys(itemsByCategory).length > 0) {
+      setExpandedCategories(new Set(Object.keys(itemsByCategory)));
+    }
+  }, [itemsByCategory, expandedCategories.size]);
 
   const toggleCategory = (category: string) => {
     setExpandedCategories(prev => {
@@ -145,11 +147,19 @@ export default function EverydayItems() {
 
   const handleToggleActive = async (id: number | undefined, currentState: boolean, itemName: string) => {
     if (id !== undefined) {
-      await db.items.update(id, { is_active: !currentState });
-      if (!currentState) {
-        toast.success(`${itemName} selected for shopping`);
-      } else {
-        toast.info(`${itemName} removed from shopping list`);
+      try {
+        await db.items.update(id, { is_active: !currentState });
+        // Toast notifications moved after DB update to prevent blocking
+        setTimeout(() => {
+          if (!currentState) {
+            toast.success(`${itemName} selected for shopping`);
+          } else {
+            toast.info(`${itemName} removed from shopping list`);
+          }
+        }, 0);
+      } catch (error) {
+        toast.error('Failed to update item');
+        console.error('Toggle Active Error:', error);
       }
     }
   };
@@ -406,7 +416,7 @@ export default function EverydayItems() {
           item.id ? db.items.update(item.id, { is_active: true }) : Promise.resolve()
         )
       );
-      toast.success(`${itemsToSelect.length} items selected for shopping`);
+      toast.success(`${itemsToSelect.length} items selected`);
     } finally {
       setIsBulkOperationLoading(false);
     }
@@ -722,13 +732,9 @@ export default function EverydayItems() {
                                 </div>
                               ) : (
                                 <div className="flex items-start gap-3">
-                                  <div
-                                    className="flex items-start flex-1 min-w-0 pt-1"
-                                    onClick={() => handleToggleActive(item.id, item.is_active, item.name)}
-                                  >
+                                  <div className="flex items-start flex-1 min-w-0 pt-1">
                                     <Checkbox
                                       checked={item.is_active}
-                                      onCheckedChange={() => handleToggleActive(item.id, item.is_active, item.name)}
                                       className="shrink-0 pointer-events-none"
                                     />
                                     <div className="ml-3 flex-1 min-w-0">
