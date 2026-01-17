@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Trash2, Edit2, Save, X, Upload, Search, ChevronDown, ChevronRight, Download, FileDown } from 'lucide-react';
+import { Trash2, Edit2, Save, X, Upload, Search, ChevronDown, ChevronRight, Download, FileDown, FolderX } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -45,6 +45,8 @@ export default function EverydayItems() {
   const [importData, setImportData] = useState('');
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const [exportedData, setExportedData] = useState('');
+  const [deleteCategoryDialogOpen, setDeleteCategoryDialogOpen] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Query all items from IndexedDB
@@ -339,6 +341,27 @@ export default function EverydayItems() {
     }
   };
 
+  const handleDeleteCategory = (category: string) => {
+    setCategoryToDelete(category);
+    setDeleteCategoryDialogOpen(true);
+  };
+
+  const confirmDeleteCategory = async () => {
+    if (!categoryToDelete) return;
+
+    // Get all items in this category
+    const itemsToDelete = items.filter(item => item.category === categoryToDelete);
+
+    // Delete all items in the category
+    await Promise.all(
+      itemsToDelete.map(item => item.id ? db.items.delete(item.id) : Promise.resolve())
+    );
+
+    setDeleteCategoryDialogOpen(false);
+    setCategoryToDelete(null);
+    toast.success(`Category "${categoryToDelete}" and ${itemsToDelete.length} item${itemsToDelete.length !== 1 ? 's' : ''} deleted`);
+  };
+
   return (
     <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
       <header className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 sm:mb-8">
@@ -507,6 +530,17 @@ export default function EverydayItems() {
                       </p>
                     </div>
                   </div>
+                  <Button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteCategory(category);
+                    }}
+                    variant="ghost"
+                    size="sm"
+                    className="shrink-0 text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+                  >
+                    <FolderX className="h-4 w-4" />
+                  </Button>
                 </div>
               </button>
               {isExpanded && (
@@ -697,6 +731,29 @@ export default function EverydayItems() {
             >
               Restore Items
             </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Category Dialog */}
+      <AlertDialog open={deleteCategoryDialogOpen} onOpenChange={setDeleteCategoryDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Category</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete the category <strong className="text-gray-900">"{categoryToDelete}"</strong>?
+              <br /><br />
+              <strong className="text-red-600">Warning:</strong> This will permanently delete all {itemsByCategory[categoryToDelete || '']?.length || 0} item{itemsByCategory[categoryToDelete || '']?.length !== 1 ? 's' : ''} in this category. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction
+              onClick={confirmDeleteCategory}
+              className="bg-rose-500 hover:bg-rose-600 text-white"
+            >
+              Delete Category & Items
+            </AlertDialogAction>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
