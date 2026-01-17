@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Trash2, Edit2, Save, X, Upload, Search, ChevronDown, ChevronRight, Download, FolderX, FolderEdit, Loader2 } from 'lucide-react';
+import { Trash2, Edit2, Save, X, Upload, Search, ChevronDown, ChevronRight, Download, FolderX, FolderEdit, Loader2, CheckSquare, Square } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -396,6 +396,34 @@ export default function EverydayItems() {
     }
   };
 
+  const handleSelectAll = async () => {
+    setIsLoading(true);
+    try {
+      await Promise.all(
+        filteredItems.map(item =>
+          item.id && !item.is_active ? db.items.update(item.id, { is_active: true }) : Promise.resolve()
+        )
+      );
+      toast.success(`${filteredItems.filter(item => !item.is_active).length} items selected for shopping`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleClearAll = async () => {
+    setIsLoading(true);
+    try {
+      await Promise.all(
+        filteredItems.map(item =>
+          item.id && item.is_active ? db.items.update(item.id, { is_active: false }) : Promise.resolve()
+        )
+      );
+      toast.info(`${filteredItems.filter(item => item.is_active).length} items removed from shopping list`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-20 sm:pb-8">
       <header className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 sm:mb-8">
@@ -533,6 +561,32 @@ export default function EverydayItems() {
         </section>
       ) : (
         <>
+          {/* Bulk Selection Controls */}
+          {filteredItems.length > 0 && (
+            <div className="flex gap-2 mb-4">
+              <Button
+                onClick={handleSelectAll}
+                variant="outline"
+                size="sm"
+                className="flex-1 border-green-200 text-green-600 hover:bg-green-50 hover:border-green-300"
+                disabled={isLoading}
+              >
+                {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckSquare className="mr-2 h-4 w-4" />}
+                Select All
+              </Button>
+              <Button
+                onClick={handleClearAll}
+                variant="outline"
+                size="sm"
+                className="flex-1 border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300"
+                disabled={isLoading}
+              >
+                {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Square className="mr-2 h-4 w-4" />}
+                Clear All
+              </Button>
+            </div>
+          )}
+
           {/* Items List Grouped by Category */}
           <section className="space-y-4 sm:space-y-6">
             {Object.entries(itemsByCategory).sort().map(([category, categoryItems]) => {
