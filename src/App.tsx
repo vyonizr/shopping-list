@@ -3,6 +3,7 @@ import EverydayItems from './pages/EverydayItems';
 import ShoppingSession from './pages/ShoppingSession';
 import Navigation from './components/Navigation';
 import { Toaster } from './components/ui/sonner';
+import packageJson from '../package.json';
 
 function App() {
   return (
@@ -13,6 +14,9 @@ function App() {
           <Route path="/" element={<EverydayItems />} />
           <Route path="/shop" element={<ShoppingSession />} />
         </Routes>
+        <footer className="px-4 py-6 text-center text-sm text-gray-500">
+          © {new Date().getFullYear()} vyonizr · v{packageJson.version}
+        </footer>
         <Toaster
           position="bottom-center"
           toastOptions={{
