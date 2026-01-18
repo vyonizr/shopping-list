@@ -384,7 +384,7 @@ export default function ShoppingSession() {
             <div className="flex items-center justify-between mb-3 sm:mb-4">
               <h3 className="text-lg font-semibold flex items-center gap-2 text-gray-700">
                 <span>📋</span>
-                <span>Remaining Items</span>
+                <span>Copy As Text</span>
               </h3>
               <Button
                 onClick={handleCopyToClipboard}

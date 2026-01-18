@@ -12,17 +12,17 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['vite.svg'],
+      includeAssets: ['goshop_logo.svg'],
       manifest: {
         name: 'GoShop',
         short_name: 'GoShop',
-        description: 'Offline-first shopping list app',
+        description: 'Shopping list app',
         theme_color: '#ffffff',
         background_color: '#ffffff',
         display: 'standalone',
         icons: [
           {
-            src: '/vite.svg',
+            src: '/goshop_logo_square.svg',
             sizes: '192x192',
             type: 'image/svg+xml'
           }
