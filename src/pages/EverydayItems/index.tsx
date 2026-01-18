@@ -285,7 +285,7 @@ export default function EverydayItems() {
   };
 
   const confirmImport = async () => {
-    setIsLoading(true);
+    setIsBulkOperationLoading(true);
     try {
       if (!importData.trim()) {
         toast.error('Please paste the export data');
@@ -331,7 +331,7 @@ export default function EverydayItems() {
       toast.error('Failed to import database. Please check the data format.');
       console.error('Import Error:', error);
     } finally {
-      setIsLoading(false);
+      setIsBulkOperationLoading(false);
     }
   };
 
@@ -370,7 +370,7 @@ export default function EverydayItems() {
   const confirmRenameCategory = async () => {
     if (!categoryToRename || !newCategoryName.trim() || isLoading) return;
 
-    setIsLoading(true);
+    setIsBulkOperationLoading(true);
     try {
       const trimmedNewName = newCategoryName.trim();
 
@@ -407,7 +407,7 @@ export default function EverydayItems() {
       setNewCategoryName('');
       toast.success(`Category renamed from "${categoryToRename}" to "${trimmedNewName}"`);
     } finally {
-      setIsLoading(false);
+      setIsBulkOperationLoading(false);
     }
   };
 
