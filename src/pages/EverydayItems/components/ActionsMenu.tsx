@@ -2,11 +2,10 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { Trash2, FileDown, Upload, FileSpreadsheet, Download } from 'lucide-react';
+import { Trash2, Upload, Download } from 'lucide-react';
 
 interface ActionsMenuProps {
   onDeleteAll: () => void;
@@ -18,8 +17,6 @@ interface ActionsMenuProps {
 
 export default function ActionsMenu({
   onDeleteAll,
-  onDownloadTemplate,
-  onImportCSV,
   onImportDatabase,
   onExportDatabase,
 }: ActionsMenuProps) {
@@ -30,8 +27,8 @@ export default function ActionsMenu({
           Tools
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48 bg-white">
-        <DropdownMenuItem onClick={onDownloadTemplate}>
+      <DropdownMenuContent align="end" className="w-fit bg-white">
+        {/* <DropdownMenuItem onClick={onDownloadTemplate}>
           <FileDown className="mr-2 h-4 w-4 text-purple-600" />
           <span>CSV Template</span>
         </DropdownMenuItem>
@@ -39,16 +36,15 @@ export default function ActionsMenu({
           <FileSpreadsheet className="mr-2 h-4 w-4 text-orange-600" />
           <span>Import CSV</span>
         </DropdownMenuItem>
-        <DropdownMenuSeparator />
+        <DropdownMenuSeparator /> */}
         <DropdownMenuItem onClick={onExportDatabase}>
-          <Upload className="mr-2 h-4 w-4 text-green-600" />
+          <Upload className="mr-2 h-4 w-4" />
           <span>Backup</span>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={onImportDatabase}>
-          <Download className="mr-2 h-4 w-4 text-blue-600" />
+          <Download className="mr-2 h-4 w-4" />
           <span>Restore</span>
         </DropdownMenuItem>
-        <DropdownMenuSeparator />
         <DropdownMenuItem onClick={onDeleteAll} className="text-red-600 focus:text-red-600">
           <Trash2 className="mr-2 h-4 w-4" />
           <span>Delete All</span>
