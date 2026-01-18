@@ -71,4 +71,17 @@ describe('EverydayItems', () => {
     // Verify success toast was shown
     expect(toast.success).toHaveBeenCalledWith('Item "Milk" added successfully');
   });
+
+  it('does not add item when name is empty', async () => {
+    const user = userEvent.setup();
+
+    render(<EverydayItems />);
+
+    // Try to submit without entering item name
+    const submitButton = screen.getByRole('button', { name: /add item/i });
+    await user.click(submitButton);
+
+    // Verify database add was NOT called
+    expect(db.items.add).not.toHaveBeenCalled();
+  });
 });
