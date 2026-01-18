@@ -718,7 +718,7 @@ export default function EverydayItems() {
                                     </div>
                                   </div>
                                   <div className="flex gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
-                                    <Button onClick={() => handleEdit(item)} variant="secondary" size="sm" className="bg-amber-100 hover:bg-amber-200 text-amber-700 border-0">
+                                    <Button onClick={() => handleEdit(item)} variant="secondary" size="sm" className="bg-gray-100 hover:bg-gray-200 text-gray-700 border-0">
                                       <Edit2 className="h-4 w-4" />
                                     </Button>
                                     <Button onClick={() => handleDelete(item.id)} variant="destructive" size="sm" className="bg-rose-200 hover:bg-rose-300 text-rose-700">
