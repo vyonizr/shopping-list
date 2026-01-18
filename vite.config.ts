@@ -1,9 +1,9 @@
 /// <reference types="vitest/config" />
-import { defineConfig } from 'vite'
-import tailwindcss from '@tailwindcss/vite'
-import react from '@vitejs/plugin-react'
-import { VitePWA } from 'vite-plugin-pwa'
-import path from 'path'
+import { defineConfig } from 'vite';
+import tailwindcss from '@tailwindcss/vite';
+import react from '@vitejs/plugin-react';
+import { VitePWA } from 'vite-plugin-pwa';
+import path from 'path';
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -24,9 +24,9 @@ export default defineConfig({
           {
             src: '/goshop_logo_square.svg',
             sizes: '192x192',
-            type: 'image/svg+xml'
-          }
-        ]
+            type: 'image/svg+xml',
+          },
+        ],
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico}'],
@@ -38,24 +38,24 @@ export default defineConfig({
               cacheName: 'google-fonts-cache',
               expiration: {
                 maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
+                maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
               },
               cacheableResponse: {
-                statuses: [0, 200]
-              }
-            }
-          }
-        ]
-      }
-    })
+                statuses: [0, 200],
+              },
+            },
+          },
+        ],
+      },
+    }),
   ],
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      '@': path.resolve(__dirname, './src'),
     },
   },
   test: {
     globals: true,
     environment: 'jsdom',
-  }
-})
+  },
+});

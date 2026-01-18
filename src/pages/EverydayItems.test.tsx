@@ -7,7 +7,7 @@ import { db } from '../db/schema';
 
 // Mock the dexie-react-hooks module
 vi.mock('dexie-react-hooks', () => ({
-  useLiveQuery: vi.fn(() => [])
+  useLiveQuery: vi.fn(() => []),
 }));
 
 // Mock the toast notifications
@@ -15,8 +15,8 @@ vi.mock('sonner', () => ({
   toast: {
     success: vi.fn(),
     error: vi.fn(),
-    info: vi.fn()
-  }
+    info: vi.fn(),
+  },
 }));
 
 // Mock the database
@@ -27,10 +27,10 @@ vi.mock('../db/schema', () => ({
       update: vi.fn(),
       toArray: vi.fn(() => Promise.resolve([])),
       filter: vi.fn(() => ({
-        first: vi.fn(() => Promise.resolve(undefined))
-      }))
-    }
-  }
+        first: vi.fn(() => Promise.resolve(undefined)),
+      })),
+    },
+  },
 }));
 
 describe('EverydayItems', () => {
@@ -66,11 +66,13 @@ describe('EverydayItems', () => {
       name: 'Milk',
       category: 'Uncategorized',
       is_active: false,
-      created_at: expect.any(Number)
+      created_at: expect.any(Number),
     });
 
     // Verify success toast was shown
-    expect(toast.success).toHaveBeenCalledWith('Item "Milk" added successfully');
+    expect(toast.success).toHaveBeenCalledWith(
+      'Item "Milk" added successfully'
+    );
   });
 
   it('does not add item when name is empty', async () => {
@@ -98,7 +100,7 @@ describe('EverydayItems', () => {
       name: 'Bread',
       category: 'Bakery',
       is_active: false,
-      created_at: Date.now()
+      created_at: Date.now(),
     };
 
     // Simple approach: alternate between items and categories
@@ -112,9 +114,12 @@ describe('EverydayItems', () => {
     render(<EverydayItems />);
 
     // Wait for the item to be rendered
-    const itemElement = await waitFor(() => {
-      return screen.getByText('Bread');
-    }, { timeout: 3000 });
+    const itemElement = await waitFor(
+      () => {
+        return screen.getByText('Bread');
+      },
+      { timeout: 3000 }
+    );
 
     expect(itemElement).toBeInTheDocument();
 
@@ -125,8 +130,13 @@ describe('EverydayItems', () => {
     expect(db.items.update).toHaveBeenCalledWith(1, { is_active: true });
 
     // Verify success toast was shown (using setTimeout, so we need to wait)
-    await waitFor(() => {
-      expect(toast.success).toHaveBeenCalledWith('Bread selected for shopping');
-    }, { timeout: 1500 });
+    await waitFor(
+      () => {
+        expect(toast.success).toHaveBeenCalledWith(
+          'Bread selected for shopping'
+        );
+      },
+      { timeout: 1500 }
+    );
   });
 });

@@ -13,7 +13,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Trash2, Edit2, Save, X, Upload, Search, ChevronDown, ChevronRight, Download, FolderX, FolderEdit, Loader2, Square } from 'lucide-react';
+import {
+  Trash2,
+  Edit2,
+  Save,
+  X,
+  Upload,
+  Search,
+  ChevronDown,
+  ChevronRight,
+  Download,
+  FolderX,
+  FolderEdit,
+  Loader2,
+  Square,
+} from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -40,16 +54,22 @@ export default function EverydayItems() {
   const [editShowNewCategory, setEditShowNewCategory] = useState(false);
   const [editCustomCategory, setEditCustomCategory] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
+    new Set()
+  );
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState<number | undefined>(undefined);
+  const [itemToDelete, setItemToDelete] = useState<number | undefined>(
+    undefined
+  );
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [importData, setImportData] = useState('');
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const [exportedData, setExportedData] = useState('');
-  const [deleteCategoryDialogOpen, setDeleteCategoryDialogOpen] = useState(false);
+  const [deleteCategoryDialogOpen, setDeleteCategoryDialogOpen] =
+    useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
-  const [renameCategoryDialogOpen, setRenameCategoryDialogOpen] = useState(false);
+  const [renameCategoryDialogOpen, setRenameCategoryDialogOpen] =
+    useState(false);
   const [categoryToRename, setCategoryToRename] = useState<string | null>(null);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -60,19 +80,22 @@ export default function EverydayItems() {
   const items = useLiveQuery(() => db.items.toArray()) || [];
 
   // Get unique categories for dropdown
-  const categories = useLiveQuery(async () => {
-    const allItems = await db.items.toArray();
-    const uniqueCategories = [...new Set(allItems.map(item => item.category))]
-      .filter(Boolean)
-      .sort();
-    return uniqueCategories;
-  }) || [];
+  const categories =
+    useLiveQuery(async () => {
+      const allItems = await db.items.toArray();
+      const uniqueCategories = [
+        ...new Set(allItems.map((item) => item.category)),
+      ]
+        .filter(Boolean)
+        .sort();
+      return uniqueCategories;
+    }) || [];
 
   // Check if queries are still loading
   const isQueryLoading = items === undefined || categories === undefined;
 
   // Filter items based on search query
-  const filteredItems = items.filter(item => {
+  const filteredItems = items.filter((item) => {
     const query = searchQuery.toLowerCase().trim();
     return (
       item.name.toLowerCase().includes(query) ||
@@ -81,24 +104,30 @@ export default function EverydayItems() {
   });
 
   // Group items by category
-  const itemsByCategory = filteredItems.reduce((acc, item) => {
-    const category = item.category || 'Uncategorized';
-    if (!acc[category]) {
-      acc[category] = [];
-    }
-    acc[category].push(item);
-    return acc;
-  }, {} as Record<string, Item[]>);
+  const itemsByCategory = filteredItems.reduce(
+    (acc, item) => {
+      const category = item.category || 'Uncategorized';
+      if (!acc[category]) {
+        acc[category] = [];
+      }
+      acc[category].push(item);
+      return acc;
+    },
+    {} as Record<string, Item[]>
+  );
 
   // Initialize all categories as expanded on first render
   useEffect(() => {
-    if (expandedCategories.size === 0 && Object.keys(itemsByCategory).length > 0) {
+    if (
+      expandedCategories.size === 0 &&
+      Object.keys(itemsByCategory).length > 0
+    ) {
       setExpandedCategories(new Set(Object.keys(itemsByCategory)));
     }
   }, [itemsByCategory, expandedCategories.size]);
 
   const toggleCategory = (category: string) => {
-    setExpandedCategories(prev => {
+    setExpandedCategories((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(category)) {
         newSet.delete(category);
@@ -121,14 +150,17 @@ export default function EverydayItems() {
 
       // Check for duplicate
       const duplicate = await db.items
-        .filter(item =>
-          item.name.toLowerCase() === newItemName.trim().toLowerCase() &&
-          item.category.toLowerCase() === categoryToUse.toLowerCase()
+        .filter(
+          (item) =>
+            item.name.toLowerCase() === newItemName.trim().toLowerCase() &&
+            item.category.toLowerCase() === categoryToUse.toLowerCase()
         )
         .first();
 
       if (duplicate) {
-        toast.error(`Item "${newItemName.trim()}" already exists in category "${categoryToUse}"`);
+        toast.error(
+          `Item "${newItemName.trim()}" already exists in category "${categoryToUse}"`
+        );
         return;
       }
 
@@ -136,7 +168,7 @@ export default function EverydayItems() {
         name: newItemName.trim(),
         category: categoryToUse,
         is_active: false,
-        created_at: Date.now()
+        created_at: Date.now(),
       });
 
       setNewItemName('');
@@ -149,7 +181,11 @@ export default function EverydayItems() {
     }
   };
 
-  const handleToggleActive = async (id: number | undefined, currentState: boolean, itemName: string) => {
+  const handleToggleActive = async (
+    id: number | undefined,
+    currentState: boolean,
+    itemName: string
+  ) => {
     if (id !== undefined) {
       try {
         await db.items.update(id, { is_active: !currentState });
@@ -208,21 +244,24 @@ export default function EverydayItems() {
 
         // Check for duplicate (excluding current item)
         const duplicate = await db.items
-          .filter(item =>
-            item.id !== editingId &&
-            item.name.toLowerCase() === editName.trim().toLowerCase() &&
-            item.category.toLowerCase() === categoryToUse.toLowerCase()
+          .filter(
+            (item) =>
+              item.id !== editingId &&
+              item.name.toLowerCase() === editName.trim().toLowerCase() &&
+              item.category.toLowerCase() === categoryToUse.toLowerCase()
           )
           .first();
 
         if (duplicate) {
-          toast.error(`Item "${editName.trim()}" already exists in category "${categoryToUse}"`);
+          toast.error(
+            `Item "${editName.trim()}" already exists in category "${categoryToUse}"`
+          );
           return;
         }
 
         await db.items.update(editingId, {
           name: editName.trim(),
-          category: categoryToUse
+          category: categoryToUse,
         });
         setEditingId(null);
         setEditName('');
@@ -251,12 +290,12 @@ export default function EverydayItems() {
         version: 'SHOPLIST_DB_V1',
         timestamp: Date.now(),
         itemCount: allItems.length,
-        items: allItems.map(item => ({
+        items: allItems.map((item) => ({
           name: item.name,
           category: item.category,
           is_active: item.is_active,
-          created_at: item.created_at
-        }))
+          created_at: item.created_at,
+        })),
       };
 
       const jsonString = JSON.stringify(exportData);
@@ -319,7 +358,7 @@ export default function EverydayItems() {
           name: item.name,
           category: item.category,
           is_active: item.is_active || false,
-          created_at: item.created_at || Date.now()
+          created_at: item.created_at || Date.now(),
         });
         imported++;
       }
@@ -346,16 +385,22 @@ export default function EverydayItems() {
     setIsLoading(true);
     try {
       // Get all items in this category
-      const itemsToDelete = items.filter(item => item.category === categoryToDelete);
+      const itemsToDelete = items.filter(
+        (item) => item.category === categoryToDelete
+      );
 
       // Delete all items in the category
       await Promise.all(
-        itemsToDelete.map(item => item.id ? db.items.delete(item.id) : Promise.resolve())
+        itemsToDelete.map((item) =>
+          item.id ? db.items.delete(item.id) : Promise.resolve()
+        )
       );
 
       setDeleteCategoryDialogOpen(false);
       setCategoryToDelete(null);
-      toast.success(`Category "${categoryToDelete}" and ${itemsToDelete.length} item${itemsToDelete.length !== 1 ? 's' : ''} deleted`);
+      toast.success(
+        `Category "${categoryToDelete}" and ${itemsToDelete.length} item${itemsToDelete.length !== 1 ? 's' : ''} deleted`
+      );
     } finally {
       setIsLoading(false);
     }
@@ -384,7 +429,7 @@ export default function EverydayItems() {
 
       // Check if new category name already exists
       const existingCategory = categories.find(
-        cat => cat.toLowerCase() === trimmedNewName.toLowerCase()
+        (cat) => cat.toLowerCase() === trimmedNewName.toLowerCase()
       );
 
       if (existingCategory) {
@@ -393,19 +438,25 @@ export default function EverydayItems() {
       }
 
       // Get all items in the category to rename
-      const itemsToUpdate = items.filter(item => item.category === categoryToRename);
+      const itemsToUpdate = items.filter(
+        (item) => item.category === categoryToRename
+      );
 
       // Update all items with new category name
       await Promise.all(
-        itemsToUpdate.map(item =>
-          item.id ? db.items.update(item.id, { category: trimmedNewName }) : Promise.resolve()
+        itemsToUpdate.map((item) =>
+          item.id
+            ? db.items.update(item.id, { category: trimmedNewName })
+            : Promise.resolve()
         )
       );
 
       setRenameCategoryDialogOpen(false);
       setCategoryToRename(null);
       setNewCategoryName('');
-      toast.success(`Category renamed from "${categoryToRename}" to "${trimmedNewName}"`);
+      toast.success(
+        `Category renamed from "${categoryToRename}" to "${trimmedNewName}"`
+      );
     } finally {
       setIsBulkOperationLoading(false);
     }
@@ -414,10 +465,12 @@ export default function EverydayItems() {
   const handleSelectAll = async () => {
     setIsBulkOperationLoading(true);
     try {
-      const itemsToSelect = filteredItems.filter(item => !item.is_active);
+      const itemsToSelect = filteredItems.filter((item) => !item.is_active);
       await Promise.all(
-        itemsToSelect.map(item =>
-          item.id ? db.items.update(item.id, { is_active: true }) : Promise.resolve()
+        itemsToSelect.map((item) =>
+          item.id
+            ? db.items.update(item.id, { is_active: true })
+            : Promise.resolve()
         )
       );
       toast.success(`${itemsToSelect.length} items selected`);
@@ -429,10 +482,12 @@ export default function EverydayItems() {
   const handleClearAll = async () => {
     setIsBulkOperationLoading(true);
     try {
-      const itemsToClear = filteredItems.filter(item => item.is_active);
+      const itemsToClear = filteredItems.filter((item) => item.is_active);
       await Promise.all(
-        itemsToClear.map(item =>
-          item.id ? db.items.update(item.id, { is_active: false }) : Promise.resolve()
+        itemsToClear.map((item) =>
+          item.id
+            ? db.items.update(item.id, { is_active: false })
+            : Promise.resolve()
         )
       );
       toast.info(`${itemsToClear.length} items removed from shopping list`);
@@ -456,7 +511,9 @@ export default function EverydayItems() {
   return (
     <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-20 sm:pb-8">
       <header className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-700">Everyday Items</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-700">
+          Everyday Items
+        </h1>
 
         <nav className="flex gap-2 flex-wrap">
           <Button
@@ -488,11 +545,19 @@ export default function EverydayItems() {
 
       {/* Add New Item Form */}
       <section className="mb-6 sm:mb-8">
-        <form onSubmit={handleAddItem} className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
-          <h2 className="text-lg font-semibold mb-4 text-gray-700">Add New Item</h2>
+        <form
+          onSubmit={handleAddItem}
+          className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100"
+        >
+          <h2 className="text-lg font-semibold mb-4 text-gray-700">
+            Add New Item
+          </h2>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="itemName" className="block text-sm font-medium text-gray-700 mb-2">
+              <Label
+                htmlFor="itemName"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Item Name *
               </Label>
               <Input
@@ -505,27 +570,38 @@ export default function EverydayItems() {
               />
             </div>
             <div>
-              <Label htmlFor="itemCategory" className="block text-sm font-medium text-gray-700 mb-2">
+              <Label
+                htmlFor="itemCategory"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Category *
               </Label>
               {!showNewCategoryInput ? (
                 <div className="space-y-2">
-                  <Select value={newItemCategory} onValueChange={(value) => {
-                    if (value === '__new__') {
-                      setShowNewCategoryInput(true);
-                      setNewItemCategory('');
-                    } else {
-                      setNewItemCategory(value);
-                    }
-                  }}>
+                  <Select
+                    value={newItemCategory}
+                    onValueChange={(value) => {
+                      if (value === '__new__') {
+                        setShowNewCategoryInput(true);
+                        setNewItemCategory('');
+                      } else {
+                        setNewItemCategory(value);
+                      }
+                    }}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select a category..." />
                     </SelectTrigger>
                     <SelectContent>
-                      {categories.map(cat => (
-                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                      {categories.map((cat) => (
+                        <SelectItem key={cat} value={cat}>
+                          {cat}
+                        </SelectItem>
                       ))}
-                      <SelectItem value="__new__" className="font-semibold text-blue-600">
+                      <SelectItem
+                        value="__new__"
+                        className="font-semibold text-blue-600"
+                      >
                         + Add New Category
                       </SelectItem>
                     </SelectContent>
@@ -554,7 +630,11 @@ export default function EverydayItems() {
               )}
             </div>
           </div>
-          <Button type="submit" className="mt-6 w-full bg-blue-300 hover:bg-blue-400 text-blue-900" disabled={isLoading}>
+          <Button
+            type="submit"
+            className="mt-6 w-full bg-blue-300 hover:bg-blue-400 text-blue-900"
+            disabled={isLoading}
+          >
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Add Item
           </Button>
@@ -566,7 +646,8 @@ export default function EverydayItems() {
         <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
         {searchQuery && (
           <p className="text-sm text-gray-500 mt-2">
-            Found {filteredItems.length} item{filteredItems.length !== 1 ? 's' : ''}
+            Found {filteredItems.length} item
+            {filteredItems.length !== 1 ? 's' : ''}
           </p>
         )}
       </section>
@@ -582,7 +663,10 @@ export default function EverydayItems() {
           {/* Bulk Selection Controls */}
           {filteredItems.length > 0 && (
             <div className="flex gap-2 mb-4">
-              <SelectAllButton onClick={handleSelectAll} isLoading={isBulkOperationLoading} />
+              <SelectAllButton
+                onClick={handleSelectAll}
+                isLoading={isBulkOperationLoading}
+              />
               <Button
                 onClick={handleClearAll}
                 variant="outline"
@@ -590,7 +674,11 @@ export default function EverydayItems() {
                 className="flex-1 border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300"
                 disabled={isBulkOperationLoading}
               >
-                {isBulkOperationLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Square className="mr-2 h-4 w-4" />}
+                {isBulkOperationLoading ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Square className="mr-2 h-4 w-4" />
+                )}
                 Clear All
               </Button>
             </div>
@@ -606,159 +694,215 @@ export default function EverydayItems() {
             <>
               {/* Items List Grouped by Category */}
               <section className="space-y-4 sm:space-y-6">
-                {Object.entries(itemsByCategory).sort().map(([category, categoryItems]) => {
-                  const isExpanded = expandedCategories.has(category);
-                  return (
-                    <article key={category} className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-                      <div
-                        onClick={() => toggleCategory(category)}
-                        className="w-full bg-blue-50 px-4 sm:px-6 py-3 border-b border-blue-100 hover:bg-blue-100 transition-colors text-left cursor-pointer"
+                {Object.entries(itemsByCategory)
+                  .sort()
+                  .map(([category, categoryItems]) => {
+                    const isExpanded = expandedCategories.has(category);
+                    return (
+                      <article
+                        key={category}
+                        className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden"
                       >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2 flex-1 min-w-0">
-                            {isExpanded ? (
-                              <ChevronDown className="h-5 w-5 text-blue-500 shrink-0" />
-                            ) : (
-                              <ChevronRight className="h-5 w-5 text-blue-500 shrink-0" />
-                            )}
-                            <div className="min-w-0">
-                              <h3 className="text-lg sm:text-xl font-semibold text-blue-700">{category}</h3>
-                              <p className="text-sm text-blue-400">
-                                {categoryItems.length} item{categoryItems.length !== 1 ? 's' : ''}
-                              </p>
+                        <div
+                          onClick={() => toggleCategory(category)}
+                          className="w-full bg-blue-50 px-4 sm:px-6 py-3 border-b border-blue-100 hover:bg-blue-100 transition-colors text-left cursor-pointer"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 flex-1 min-w-0">
+                              {isExpanded ? (
+                                <ChevronDown className="h-5 w-5 text-blue-500 shrink-0" />
+                              ) : (
+                                <ChevronRight className="h-5 w-5 text-blue-500 shrink-0" />
+                              )}
+                              <div className="min-w-0">
+                                <h3 className="text-lg sm:text-xl font-semibold text-blue-700">
+                                  {category}
+                                </h3>
+                                <p className="text-sm text-blue-400">
+                                  {categoryItems.length} item
+                                  {categoryItems.length !== 1 ? 's' : ''}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex gap-1 shrink-0">
+                              <Button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleRenameCategory(category);
+                                }}
+                                variant="ghost"
+                                size="sm"
+                                className="text-blue-600 hover:text-blue-700 hover:bg-blue-100"
+                              >
+                                <FolderEdit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteCategory(category);
+                                }}
+                                variant="ghost"
+                                size="sm"
+                                className="text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+                              >
+                                <FolderX className="h-4 w-4" />
+                              </Button>
                             </div>
                           </div>
-                          <div className="flex gap-1 shrink-0">
-                            <Button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleRenameCategory(category);
-                              }}
-                              variant="ghost"
-                              size="sm"
-                              className="text-blue-600 hover:text-blue-700 hover:bg-blue-100"
-                            >
-                              <FolderEdit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteCategory(category);
-                              }}
-                              variant="ghost"
-                              size="sm"
-                              className="text-rose-600 hover:text-rose-700 hover:bg-rose-50"
-                            >
-                              <FolderX className="h-4 w-4" />
-                            </Button>
-                          </div>
                         </div>
-                      </div>
-                      {isExpanded && (
-                        <ul className="divide-y divide-gray-50">
-                          {categoryItems.map(item => (
-                            <li
-                              key={item.id}
-                              className={`p-4 sm:p-5 transition-colors cursor-pointer ${
-                                item.is_active ? 'bg-blue-50' : 'bg-white hover:bg-blue-50'
-                              }`}
-                              onClick={() => handleToggleActive(item.id, item.is_active, item.name)}
-                            >
-                              {editingId === item.id ? (
-                                <div className="space-y-3">
-                                  <Input
-                                    type="text"
-                                    value={editName}
-                                    onChange={(e) => setEditName(e.target.value)}
-                                    placeholder="Item name"
-                                  />
-                                  {!editShowNewCategory ? (
-                                    <div className="space-y-2">
-                                      <Select value={editCategory} onValueChange={(value) => {
-                                        if (value === '__new__') {
-                                          setEditShowNewCategory(true);
-                                          setEditCategory('');
-                                        } else {
-                                          setEditCategory(value);
-                                        }
-                                      }}>
-                                        <SelectTrigger>
-                                          <SelectValue placeholder="Select category..." />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          {categories.map(cat => (
-                                            <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                                          ))}
-                                          <SelectItem value="__new__" className="font-semibold text-blue-600">
-                                            + Add New Category
-                                          </SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                    </div>
-                                  ) : (
-                                    <div className="space-y-2">
-                                      <Input
-                                        type="text"
-                                        value={editCustomCategory}
-                                        onChange={(e) => setEditCustomCategory(e.target.value)}
-                                        placeholder="Enter new category"
-                                      />
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          setEditShowNewCategory(false);
-                                          setEditCustomCategory('');
-                                        }}
-                                        className="text-sm text-gray-600 hover:text-gray-800 underline"
-                                      >
-                                        ← Back to existing categories
-                                      </button>
-                                    </div>
-                                  )}
-                                  <div className="flex gap-2">
-                                    <Button onClick={handleSaveEdit} variant="default" className="flex-1 bg-green-400 hover:bg-green-500 text-white" disabled={isLoading}>
-                                      {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                                      Save
-                                    </Button>
-                                    <Button onClick={handleCancelEdit} variant="secondary" className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700">
-                                      <X className="mr-2 h-4 w-4" />
-                                      Cancel
-                                    </Button>
-                                  </div>
-                                </div>
-                              ) : (
-                                <div className="flex items-start gap-3">
-                                  <div className="flex items-start flex-1 min-w-0 pt-1">
-                                    <Checkbox
-                                      checked={item.is_active}
-                                      className="shrink-0 pointer-events-none"
+                        {isExpanded && (
+                          <ul className="divide-y divide-gray-50">
+                            {categoryItems.map((item) => (
+                              <li
+                                key={item.id}
+                                className={`p-4 sm:p-5 transition-colors cursor-pointer ${
+                                  item.is_active
+                                    ? 'bg-blue-50'
+                                    : 'bg-white hover:bg-blue-50'
+                                }`}
+                                onClick={() =>
+                                  handleToggleActive(
+                                    item.id,
+                                    item.is_active,
+                                    item.name
+                                  )
+                                }
+                              >
+                                {editingId === item.id ? (
+                                  <div className="space-y-3">
+                                    <Input
+                                      type="text"
+                                      value={editName}
+                                      onChange={(e) =>
+                                        setEditName(e.target.value)
+                                      }
+                                      placeholder="Item name"
                                     />
-                                    <div className="ml-3 flex-1 min-w-0">
-                                      <span className="text-base sm:text-lg text-gray-700 block">{item.name}</span>
+                                    {!editShowNewCategory ? (
+                                      <div className="space-y-2">
+                                        <Select
+                                          value={editCategory}
+                                          onValueChange={(value) => {
+                                            if (value === '__new__') {
+                                              setEditShowNewCategory(true);
+                                              setEditCategory('');
+                                            } else {
+                                              setEditCategory(value);
+                                            }
+                                          }}
+                                        >
+                                          <SelectTrigger>
+                                            <SelectValue placeholder="Select category..." />
+                                          </SelectTrigger>
+                                          <SelectContent>
+                                            {categories.map((cat) => (
+                                              <SelectItem key={cat} value={cat}>
+                                                {cat}
+                                              </SelectItem>
+                                            ))}
+                                            <SelectItem
+                                              value="__new__"
+                                              className="font-semibold text-blue-600"
+                                            >
+                                              + Add New Category
+                                            </SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                      </div>
+                                    ) : (
+                                      <div className="space-y-2">
+                                        <Input
+                                          type="text"
+                                          value={editCustomCategory}
+                                          onChange={(e) =>
+                                            setEditCustomCategory(
+                                              e.target.value
+                                            )
+                                          }
+                                          placeholder="Enter new category"
+                                        />
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setEditShowNewCategory(false);
+                                            setEditCustomCategory('');
+                                          }}
+                                          className="text-sm text-gray-600 hover:text-gray-800 underline"
+                                        >
+                                          ← Back to existing categories
+                                        </button>
+                                      </div>
+                                    )}
+                                    <div className="flex gap-2">
+                                      <Button
+                                        onClick={handleSaveEdit}
+                                        variant="default"
+                                        className="flex-1 bg-green-400 hover:bg-green-500 text-white"
+                                        disabled={isLoading}
+                                      >
+                                        {isLoading ? (
+                                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        ) : (
+                                          <Save className="mr-2 h-4 w-4" />
+                                        )}
+                                        Save
+                                      </Button>
+                                      <Button
+                                        onClick={handleCancelEdit}
+                                        variant="secondary"
+                                        className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700"
+                                      >
+                                        <X className="mr-2 h-4 w-4" />
+                                        Cancel
+                                      </Button>
                                     </div>
                                   </div>
-                                  <div className="flex gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
-                                    <Button onClick={() => handleEdit(item)} variant="secondary" size="sm" className="bg-gray-100 hover:bg-gray-200 text-gray-700 border-0">
-                                      <Edit2 className="h-4 w-4" />
-                                    </Button>
-                                    <Button onClick={() => handleDelete(item.id)} variant="destructive" size="sm" className="bg-rose-200 hover:bg-rose-300 text-rose-700">
-                                      <Trash2 className="h-4 w-4" />
-                                    </Button>
+                                ) : (
+                                  <div className="flex items-start gap-3">
+                                    <div className="flex items-start flex-1 min-w-0 pt-1">
+                                      <Checkbox
+                                        checked={item.is_active}
+                                        className="shrink-0 pointer-events-none"
+                                      />
+                                      <div className="ml-3 flex-1 min-w-0">
+                                        <span className="text-base sm:text-lg text-gray-700 block">
+                                          {item.name}
+                                        </span>
+                                      </div>
+                                    </div>
+                                    <div
+                                      className="flex gap-2 shrink-0"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      <Button
+                                        onClick={() => handleEdit(item)}
+                                        variant="secondary"
+                                        size="sm"
+                                        className="bg-gray-100 hover:bg-gray-200 text-gray-700 border-0"
+                                      >
+                                        <Edit2 className="h-4 w-4" />
+                                      </Button>
+                                      <Button
+                                        onClick={() => handleDelete(item.id)}
+                                        variant="destructive"
+                                        size="sm"
+                                        className="bg-rose-200 hover:bg-rose-300 text-rose-700"
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </div>
                                   </div>
-                                </div>
-                              )}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </article>
-                  );
-                })}
+                                )}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </article>
+                    );
+                  })}
               </section>
 
-              {items.length === 0 && (
-                <EmptyList />
-              )}
+              {items.length === 0 && <EmptyList />}
 
               {items.length > 0 && filteredItems.length === 0 && (
                 <section className="text-center py-16 sm:py-20">
@@ -766,7 +910,9 @@ export default function EverydayItems() {
                     <Search className="mx-auto h-16 w-16" />
                   </div>
                   <p className="text-lg text-gray-500 mb-2">No items found</p>
-                  <p className="text-sm text-gray-400">Try a different search term</p>
+                  <p className="text-sm text-gray-400">
+                    Try a different search term
+                  </p>
                   <Button
                     onClick={() => setSearchQuery('')}
                     variant="outline"
@@ -787,7 +933,8 @@ export default function EverydayItems() {
           <AlertDialogHeader>
             <AlertDialogTitle>Backup Your Items</AlertDialogTitle>
             <AlertDialogDescription>
-              Copy the text below to save all your items. You can restore this backup later on any device.
+              Copy the text below to save all your items. You can restore this
+              backup later on any device.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="my-4">
@@ -799,7 +946,9 @@ export default function EverydayItems() {
             />
           </div>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setExportedData('')}>Close</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => setExportedData('')}>
+              Close
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleCopyExport}
               className="bg-green-500 hover:bg-green-600 text-white"
@@ -816,7 +965,9 @@ export default function EverydayItems() {
           <AlertDialogHeader>
             <AlertDialogTitle>Restore Your Items</AlertDialogTitle>
             <AlertDialogDescription>
-              Paste your backup text below. <strong className="text-red-600">Warning:</strong> This will replace all current items with the backup.
+              Paste your backup text below.{' '}
+              <strong className="text-red-600">Warning:</strong> This will
+              replace all current items with the backup.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="my-4">
@@ -828,7 +979,9 @@ export default function EverydayItems() {
             />
           </div>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setImportData('')}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => setImportData('')}>
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmImport}
               className="bg-blue-500 hover:bg-blue-600 text-white"
@@ -842,14 +995,20 @@ export default function EverydayItems() {
       </AlertDialog>
 
       {/* Rename Category Dialog */}
-      <AlertDialog open={renameCategoryDialogOpen} onOpenChange={setRenameCategoryDialogOpen}>
+      <AlertDialog
+        open={renameCategoryDialogOpen}
+        onOpenChange={setRenameCategoryDialogOpen}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Rename Category</AlertDialogTitle>
             <AlertDialogDescription>
-              Enter a new name for the category <strong className="text-gray-900">"{categoryToRename}"</strong>.
+              Enter a new name for the category{' '}
+              <strong className="text-gray-900">"{categoryToRename}"</strong>.
               <br />
-              All {itemsByCategory[categoryToRename || '']?.length || 0} item{itemsByCategory[categoryToRename || '']?.length !== 1 ? 's' : ''} will be moved to the new category.
+              All {itemsByCategory[categoryToRename || '']?.length || 0} item
+              {itemsByCategory[categoryToRename || '']?.length !== 1 ? 's' : ''}{' '}
+              will be moved to the new category.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="my-4">
@@ -862,10 +1021,12 @@ export default function EverydayItems() {
             />
           </div>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => {
-              setCategoryToRename(null);
-              setNewCategoryName('');
-            }}>
+            <AlertDialogCancel
+              onClick={() => {
+                setCategoryToRename(null);
+                setNewCategoryName('');
+              }}
+            >
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
@@ -881,14 +1042,23 @@ export default function EverydayItems() {
       </AlertDialog>
 
       {/* Delete Category Dialog */}
-      <AlertDialog open={deleteCategoryDialogOpen} onOpenChange={setDeleteCategoryDialogOpen}>
+      <AlertDialog
+        open={deleteCategoryDialogOpen}
+        onOpenChange={setDeleteCategoryDialogOpen}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Category</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete the category <strong className="text-gray-900">"{categoryToDelete}"</strong>?
-              <br /><br />
-              <strong className="text-red-600">Warning:</strong> This will permanently delete all {itemsByCategory[categoryToDelete || '']?.length || 0} item{itemsByCategory[categoryToDelete || '']?.length !== 1 ? 's' : ''} in this category. This action cannot be undone.
+              Are you sure you want to delete the category{' '}
+              <strong className="text-gray-900">"{categoryToDelete}"</strong>?
+              <br />
+              <br />
+              <strong className="text-red-600">Warning:</strong> This will
+              permanently delete all{' '}
+              {itemsByCategory[categoryToDelete || '']?.length || 0} item
+              {itemsByCategory[categoryToDelete || '']?.length !== 1 ? 's' : ''}{' '}
+              in this category. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -911,7 +1081,8 @@ export default function EverydayItems() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Item</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this item? This action cannot be undone.
+              Are you sure you want to delete this item? This action cannot be
+              undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -929,15 +1100,26 @@ export default function EverydayItems() {
       </AlertDialog>
 
       {/* Delete All Dialog */}
-      <AlertDialog open={deleteAllDialogOpen} onOpenChange={setDeleteAllDialogOpen}>
+      <AlertDialog
+        open={deleteAllDialogOpen}
+        onOpenChange={setDeleteAllDialogOpen}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete All Items</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete <strong className="text-gray-900">all {items.length} items</strong>?
-              <br /><br />
-              <strong className="text-red-600">Warning:</strong> This will permanently delete all everyday items in all categories. This action cannot be undone.
-              <br /><br />
+              Are you sure you want to delete{' '}
+              <strong className="text-gray-900">
+                all {items.length} items
+              </strong>
+              ?
+              <br />
+              <br />
+              <strong className="text-red-600">Warning:</strong> This will
+              permanently delete all everyday items in all categories. This
+              action cannot be undone.
+              <br />
+              <br />
               Consider creating a backup first.
             </AlertDialogDescription>
           </AlertDialogHeader>

@@ -28,6 +28,7 @@ Both pages operate on the same local database using different projections.
 ## Features
 
 ### Page A: Everyday Items
+
 - Add, edit, delete items with names and categories
 - User-defined categories with dropdown + free-form input
 - Select items for shopping (checkbox to mark as active)
@@ -38,6 +39,7 @@ Both pages operate on the same local database using different projections.
 - Backup/restore database (GZIP compressed + Base64 encoded)
 
 ### Page B: Shopping Session
+
 - View only selected items grouped by category
 - Mark items as "in cart" with checkbox
 - Add notes to specific items during shopping
@@ -46,6 +48,7 @@ Both pages operate on the same local database using different projections.
 - Progress tracker (items in cart / total items)
 
 ### Technical Features
+
 - Offline-first Progressive Web App (PWA)
 - Client-only persistence using IndexedDB via Dexie.js
 - Mobile-first responsive design with Tailwind CSS
@@ -74,10 +77,10 @@ No backend services are used or required.
 
 ## Routing
 
-| Route | Description |
-|------|------------|
-| `/` | Everyday Items (Page A) - Item management & selection |
-| `/shop` | Shopping Session (Page B) - Active shopping list |
+| Route   | Description                                           |
+| ------- | ----------------------------------------------------- |
+| `/`     | Everyday Items (Page A) - Item management & selection |
+| `/shop` | Shopping Session (Page B) - Active shopping list      |
 
 Routing controls **view selection only**.  
 No state is stored in URLs or query parameters.
@@ -87,18 +90,21 @@ No state is stored in URLs or query parameters.
 ## UI/UX Details
 
 **Category Management:**
+
 - Dropdown with existing categories + ability to create new ones
 - Free-form text input for new categories
 - Category rename/delete operations
 - Items grouped by category with collapsible sections
 
 **Shopping Session:**
+
 - In-memory cart state (not persisted to DB)
 - Session notes stored in IndexedDB
 - WhatsApp-formatted plain text export
 - Visual progress indicator
 
 **Design Approach:**
+
 - Mobile-first responsive design
 - Touch-friendly interface (44x44px minimum touch targets)
 - Tailwind CSS with serif typography (Georgia, Times)
@@ -133,6 +139,7 @@ SessionNote {
 ```
 
 **State Management:**
+
 - `is_active` flag controls which items appear on Shopping Session page
 - `inCartIds` stored in React state (session-only, not persisted)
 - Session notes persist in IndexedDB until session completion
@@ -147,6 +154,7 @@ SHOPLIST_DB_V1_GZIP:<base64-encoded-gzip-compressed-json>
 ```
 
 **Export Data Structure:**
+
 ```json
 {
   "version": "SHOPLIST_DB_V1",
@@ -196,4 +204,3 @@ src/
 └── lib/
     └── utils.ts               # Tailwind helpers
 ```
-

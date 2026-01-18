@@ -29,11 +29,11 @@ const db = new Dexie('ShoppingListDB') as Dexie & {
 
 db.version(1).stores({
   items: '++id, name, category, is_active, created_at',
-  categories: '++id, name, created_at'
+  categories: '++id, name, created_at',
 });
 
 db.version(2).stores({
-  sessionNotes: '++id, item_id, created_at'
+  sessionNotes: '++id, item_id, created_at',
 });
 
 export { db };

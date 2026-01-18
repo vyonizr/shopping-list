@@ -29,7 +29,9 @@ export const decompressData = async (base64: string): Promise<string> => {
   }
   const blob = new Blob([bytes]);
   const stream = blob.stream();
-  const decompressedStream = stream.pipeThrough(new DecompressionStream('gzip'));
+  const decompressedStream = stream.pipeThrough(
+    new DecompressionStream('gzip')
+  );
   const decompressedBlob = await new Response(decompressedStream).blob();
   return await decompressedBlob.text();
 };
