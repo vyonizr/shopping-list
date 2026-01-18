@@ -24,6 +24,7 @@ vi.mock('../db/schema', () => ({
   db: {
     items: {
       add: vi.fn(),
+      update: vi.fn(),
       toArray: vi.fn(() => Promise.resolve([])),
       filter: vi.fn(() => ({
         first: vi.fn(() => Promise.resolve(undefined))
@@ -83,5 +84,49 @@ describe('EverydayItems', () => {
 
     // Verify database add was NOT called
     expect(db.items.add).not.toHaveBeenCalled();
+  });
+
+  it('toggles item as active when checked', async () => {
+    const user = userEvent.setup();
+    const { toast } = await import('sonner');
+    const { useLiveQuery } = await import('dexie-react-hooks');
+    const { waitFor } = await import('@testing-library/react');
+
+    // Mock useLiveQuery to return a test item
+    const mockItem = {
+      id: 1,
+      name: 'Bread',
+      category: 'Bakery',
+      is_active: false,
+      created_at: Date.now()
+    };
+
+    // Simple approach: alternate between items and categories
+    let calls = 0;
+    vi.mocked(useLiveQuery).mockImplementation(() => {
+      calls++;
+      // Odd calls = items, Even calls = categories
+      return calls % 2 === 1 ? [mockItem] : ['Bakery'];
+    });
+
+    render(<EverydayItems />);
+
+    // Wait for the item to be rendered
+    const itemElement = await waitFor(() => {
+      return screen.getByText('Bread');
+    }, { timeout: 3000 });
+
+    expect(itemElement).toBeInTheDocument();
+
+    // Click the item to toggle it
+    await user.click(itemElement);
+
+    // Verify database update was called to set is_active to true
+    expect(db.items.update).toHaveBeenCalledWith(1, { is_active: true });
+
+    // Verify success toast was shown (using setTimeout, so we need to wait)
+    await waitFor(() => {
+      expect(toast.success).toHaveBeenCalledWith('Bread selected for shopping');
+    }, { timeout: 1500 });
   });
 });
