@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { db, type Item } from '../db/schema';
+import { db, type Item } from '../../db/schema';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Trash2, Edit2, Save, X, Upload, Search, ChevronDown, ChevronRight, Download, FolderX, FolderEdit, Loader2, CheckSquare, Square } from 'lucide-react';
+import { Trash2, Edit2, Save, X, Upload, Search, ChevronDown, ChevronRight, Download, FolderX, FolderEdit, Loader2, Square } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,6 +27,7 @@ import {
 import { compressData, decompressData } from '@/utils/compression';
 import EmptyList from '@/components/modules/EmptyList';
 import SearchBar from '@/components/modules/SearchBar';
+import SelectAllButton from './components/SelectAllButton';
 
 export default function EverydayItems() {
   const [newItemName, setNewItemName] = useState('');
@@ -561,16 +562,7 @@ export default function EverydayItems() {
           {/* Bulk Selection Controls */}
           {filteredItems.length > 0 && (
             <div className="flex gap-2 mb-4">
-              <Button
-                onClick={handleSelectAll}
-                variant="outline"
-                size="sm"
-                className="flex-1 border-green-200 text-green-600 hover:bg-green-50 hover:border-green-300"
-                disabled={isBulkOperationLoading}
-              >
-                {isBulkOperationLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckSquare className="mr-2 h-4 w-4" />}
-                Select All
-              </Button>
+              <SelectAllButton onClick={handleSelectAll} isLoading={isBulkOperationLoading} />
               <Button
                 onClick={handleClearAll}
                 variant="outline"
