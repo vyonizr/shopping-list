@@ -13,6 +13,7 @@ import PageHeader from './components/PageHeader';
 import AddItemForm from './components/AddItemForm';
 import CategoryGroup from './components/CategoryGroup';
 import { ExportDialog, ImportDialog } from './components/BackupDialogs';
+import DevelopmentWarning from '@/components/modules/DevelopmentWarning';
 import {
   DeleteItemDialog,
   DeleteAllDialog,
@@ -534,6 +535,9 @@ export default function EverydayItems() {
         onImportDatabase={handleImportDatabase}
         onExportDatabase={handleExportDatabase}
       />
+
+      {/* Development Warning */}
+      <DevelopmentWarning />
 
       {/* Add New Item Form */}
       <AddItemForm
