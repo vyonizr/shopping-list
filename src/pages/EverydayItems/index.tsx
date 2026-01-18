@@ -3,60 +3,25 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type Item } from '../../db/schema';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Trash2,
-  Edit2,
-  Save,
-  X,
-  Upload,
-  Search,
-  ChevronDown,
-  ChevronRight,
-  Download,
-  FolderX,
-  FolderEdit,
-  Loader2,
-  Square,
-  FileSpreadsheet,
-  FileDown,
-} from 'lucide-react';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { Search, Loader2, Square } from 'lucide-react';
 import { compressData, decompressData } from '@/utils/compression';
 import EmptyList from '@/components/modules/EmptyList';
 import SearchBar from '@/components/modules/SearchBar';
 import SelectAllButton from './components/SelectAllButton';
-import { cn } from '@/lib/utils';
 import { generateCSVTemplate, parseCSV, downloadFile } from '@/utils/csv';
+import PageHeader from './components/PageHeader';
+import AddItemForm from './components/AddItemForm';
+import CategoryGroup from './components/CategoryGroup';
+import { ExportDialog, ImportDialog } from './components/BackupDialogs';
+import {
+  DeleteItemDialog,
+  DeleteAllDialog,
+  DeleteCategoryDialog,
+} from './components/DeleteDialogs';
+import { RenameCategoryDialog } from './components/RenameCategoryDialog';
+import { ImportCSVDialog } from './components/ImportCSVDialog';
 
 export default function EverydayItems() {
-  const [newItemName, setNewItemName] = useState('');
-  const [newItemCategory, setNewItemCategory] = useState('');
-  const [showNewCategoryInput, setShowNewCategoryInput] = useState(false);
-  const [customCategory, setCustomCategory] = useState('');
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [editName, setEditName] = useState('');
-  const [editCategory, setEditCategory] = useState('');
-  const [editShowNewCategory, setEditShowNewCategory] = useState(false);
-  const [editCustomCategory, setEditCustomCategory] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
     new Set()
@@ -144,44 +109,33 @@ export default function EverydayItems() {
     });
   };
 
-  const handleAddItem = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newItemName.trim() || isLoading) return;
-
+  const handleAddItem = async (name: string, category: string) => {
     setIsLoading(true);
     try {
-      const categoryToUse = showNewCategoryInput
-        ? customCategory.trim() || 'Uncategorized'
-        : newItemCategory || 'Uncategorized';
-
       // Check for duplicate
       const duplicate = await db.items
         .filter(
           (item) =>
-            item.name.toLowerCase() === newItemName.trim().toLowerCase() &&
-            item.category.toLowerCase() === categoryToUse.toLowerCase()
+            item.name.toLowerCase() === name.toLowerCase() &&
+            item.category.toLowerCase() === category.toLowerCase()
         )
         .first();
 
       if (duplicate) {
         toast.error(
-          `Item "${newItemName.trim()}" already exists in category "${categoryToUse}"`
+          `Item "${name}" already exists in category "${category}"`
         );
         return;
       }
 
       await db.items.add({
-        name: newItemName.trim(),
-        category: categoryToUse,
+        name: name,
+        category: category,
         is_active: false,
         created_at: Date.now(),
       });
 
-      setNewItemName('');
-      setNewItemCategory('');
-      setCustomCategory('');
-      setShowNewCategoryInput(false);
-      toast.success(`Item "${newItemName.trim()}" added successfully`);
+      toast.success(`Item "${name}" added successfully`);
     } finally {
       setIsLoading(false);
     }
@@ -210,6 +164,36 @@ export default function EverydayItems() {
     }
   };
 
+  const handleUpdateItem = async (id: number, name: string, category: string) => {
+    setIsLoading(true);
+    try {
+      // Check for duplicate (excluding current item)
+      const duplicate = await db.items
+        .filter(
+          (item) =>
+            item.id !== id &&
+            item.name.toLowerCase() === name.toLowerCase() &&
+            item.category.toLowerCase() === category.toLowerCase()
+        )
+        .first();
+
+      if (duplicate) {
+        toast.error(
+          `Item "${name}" already exists in category "${category}"`
+        );
+        return;
+      }
+
+      await db.items.update(id, {
+        name: name,
+        category: category,
+      });
+      toast.success('Item updated successfully');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleDelete = async (id: number | undefined) => {
     if (id !== undefined) {
       setItemToDelete(id);
@@ -229,64 +213,6 @@ export default function EverydayItems() {
         setIsLoading(false);
       }
     }
-  };
-
-  const handleEdit = (item: Item) => {
-    if (item.id === undefined) return;
-    setEditingId(item.id);
-    setEditName(item.name);
-    setEditCategory(item.category);
-    setEditShowNewCategory(false);
-    setEditCustomCategory('');
-  };
-
-  const handleSaveEdit = async () => {
-    if (editingId !== null && editName.trim() && !isLoading) {
-      setIsLoading(true);
-      try {
-        const categoryToUse = editShowNewCategory
-          ? editCustomCategory.trim() || 'Uncategorized'
-          : editCategory || 'Uncategorized';
-
-        // Check for duplicate (excluding current item)
-        const duplicate = await db.items
-          .filter(
-            (item) =>
-              item.id !== editingId &&
-              item.name.toLowerCase() === editName.trim().toLowerCase() &&
-              item.category.toLowerCase() === categoryToUse.toLowerCase()
-          )
-          .first();
-
-        if (duplicate) {
-          toast.error(
-            `Item "${editName.trim()}" already exists in category "${categoryToUse}"`
-          );
-          return;
-        }
-
-        await db.items.update(editingId, {
-          name: editName.trim(),
-          category: categoryToUse,
-        });
-        setEditingId(null);
-        setEditName('');
-        setEditCategory('');
-        setEditShowNewCategory(false);
-        setEditCustomCategory('');
-        toast.success('Item updated successfully');
-      } finally {
-        setIsLoading(false);
-      }
-    }
-  };
-
-  const handleCancelEdit = () => {
-    setEditingId(null);
-    setEditName('');
-    setEditCategory('');
-    setEditShowNewCategory(false);
-    setEditCustomCategory('');
   };
 
   const handleExportDatabase = async () => {
@@ -601,152 +527,20 @@ export default function EverydayItems() {
 
   return (
     <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-20 sm:pb-8">
-      <header className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-700">
-          Everyday Items
-        </h1>
-
-        <nav className="flex gap-2 flex-wrap">
-          <Button
-            onClick={() => setDeleteAllDialogOpen(true)}
-            variant="outline"
-            className="border-rose-200 text-rose-600 hover:bg-rose-50 hover:border-rose-300"
-          >
-            <Trash2 className="mr-2 h-4 w-4" />
-            Delete All
-          </Button>
-          <Button
-            onClick={handleDownloadTemplate}
-            variant="outline"
-            className="border-purple-200 text-purple-600 hover:bg-purple-50 hover:border-purple-300"
-          >
-            <FileDown className="mr-2 h-4 w-4" />
-            CSV Template
-          </Button>
-          <Button
-            onClick={handleImportCSV}
-            variant="outline"
-            className="border-orange-200 text-orange-600 hover:bg-orange-50 hover:border-orange-300"
-          >
-            <FileSpreadsheet className="mr-2 h-4 w-4" />
-            Import CSV
-          </Button>
-          <Button
-            onClick={handleImportDatabase}
-            variant="outline"
-            className="border-blue-200 text-blue-600 hover:bg-blue-50 hover:border-blue-300"
-          >
-            <Download className="mr-2 h-4 w-4" />
-            Restore
-          </Button>
-          <Button
-            onClick={handleExportDatabase}
-            variant="outline"
-            className="border-green-200 text-green-600 hover:bg-green-50 hover:border-green-300"
-          >
-            <Upload className="mr-2 h-4 w-4" />
-            Backup
-          </Button>
-        </nav>
-      </header>
+      <PageHeader
+        onDeleteAll={() => setDeleteAllDialogOpen(true)}
+        onDownloadTemplate={handleDownloadTemplate}
+        onImportCSV={handleImportCSV}
+        onImportDatabase={handleImportDatabase}
+        onExportDatabase={handleExportDatabase}
+      />
 
       {/* Add New Item Form */}
-      <section className="mb-6 sm:mb-8">
-        <form
-          onSubmit={handleAddItem}
-          className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100"
-        >
-          <h2 className="text-lg font-semibold mb-4 text-gray-700">
-            Add New Item
-          </h2>
-          <div className="space-y-4">
-            <div>
-              <Label
-                htmlFor="itemName"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Item Name *
-              </Label>
-              <Input
-                type="text"
-                id="itemName"
-                value={newItemName}
-                onChange={(e) => setNewItemName(e.target.value)}
-                placeholder="e.g., Milk"
-                required
-              />
-            </div>
-            <div>
-              <Label
-                htmlFor="itemCategory"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Category *
-              </Label>
-              {!showNewCategoryInput ? (
-                <div className="space-y-2">
-                  <Select
-                    value={newItemCategory}
-                    onValueChange={(value) => {
-                      if (value === '__new__') {
-                        setShowNewCategoryInput(true);
-                        setNewItemCategory('');
-                      } else {
-                        setNewItemCategory(value);
-                      }
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a category..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((cat) => (
-                        <SelectItem key={cat} value={cat}>
-                          {cat}
-                        </SelectItem>
-                      ))}
-                      <SelectItem
-                        value="__new__"
-                        className="font-semibold text-blue-600"
-                      >
-                        + Add New Category
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <Input
-                    type="text"
-                    value={customCategory}
-                    onChange={(e) => setCustomCategory(e.target.value)}
-                    placeholder="Enter new category name"
-                    autoFocus
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowNewCategoryInput(false);
-                      setCustomCategory('');
-                    }}
-                    className="text-sm text-gray-600 hover:text-gray-800 underline"
-                  >
-                    ← Back to existing categories
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-          <Button
-            type="submit"
-            className="mt-6 w-full bg-blue-300 hover:bg-blue-400 text-blue-900"
-            disabled={isLoading}
-          >
-            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Add Item
-          </Button>
-        </form>
-      </section>
+      <AddItemForm
+        categories={categories}
+        onAddItem={handleAddItem}
+        isLoading={isLoading}
+      />
 
       {/* Search Bar */}
       <section className="mb-6">
@@ -803,211 +597,22 @@ export default function EverydayItems() {
               <section className="space-y-4 sm:space-y-6">
                 {Object.entries(itemsByCategory)
                   .sort()
-                  .map(([category, categoryItems]) => {
-                    const isExpanded = expandedCategories.has(category);
-                    return (
-                      <article
-                        key={category}
-                        className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden"
-                      >
-                        <div
-                          onClick={() => toggleCategory(category)}
-                          className="w-full bg-blue-50 px-4 sm:px-6 py-3 border-b border-blue-100 hover:bg-blue-100 transition-colors text-left cursor-pointer"
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2 flex-1 min-w-0">
-                              {isExpanded ? (
-                                <ChevronDown className="h-5 w-5 text-blue-500 shrink-0" />
-                              ) : (
-                                <ChevronRight className="h-5 w-5 text-blue-500 shrink-0" />
-                              )}
-                              <div className="min-w-0">
-                                <h3 className="text-lg sm:text-xl font-semibold text-blue-700">
-                                  {category}
-                                </h3>
-                                <p className="text-sm text-blue-400">
-                                  {categoryItems.length} item
-                                  {categoryItems.length !== 1 ? 's' : ''}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="flex gap-1 shrink-0">
-                              <Button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleRenameCategory(category);
-                                }}
-                                variant="ghost"
-                                size="sm"
-                                className="text-blue-600 hover:text-blue-700 hover:bg-blue-100"
-                              >
-                                <FolderEdit className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDeleteCategory(category);
-                                }}
-                                variant="ghost"
-                                size="sm"
-                                className="text-rose-600 hover:text-rose-700 hover:bg-rose-50"
-                              >
-                                <FolderX className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                        {isExpanded && (
-                          <ul className="divide-y divide-gray-50">
-                            {categoryItems.map((item) => (
-                              <li
-                                key={item.id}
-                                className={cn(
-                                  'p-4 sm:p-5 transition-colors cursor-pointer',
-                                  item.is_active
-                                    ? 'bg-blue-50'
-                                    : 'bg-white hover:bg-blue-50'
-                                )}
-                                onClick={() =>
-                                  handleToggleActive(
-                                    item.id,
-                                    item.is_active,
-                                    item.name
-                                  )
-                                }
-                              >
-                                {editingId === item.id ? (
-                                  <div className="space-y-3">
-                                    <Input
-                                      type="text"
-                                      value={editName}
-                                      onChange={(e) =>
-                                        setEditName(e.target.value)
-                                      }
-                                      placeholder="Item name"
-                                    />
-                                    {!editShowNewCategory ? (
-                                      <div className="space-y-2">
-                                        <Select
-                                          value={editCategory}
-                                          onValueChange={(value) => {
-                                            if (value === '__new__') {
-                                              setEditShowNewCategory(true);
-                                              setEditCategory('');
-                                            } else {
-                                              setEditCategory(value);
-                                            }
-                                          }}
-                                        >
-                                          <SelectTrigger>
-                                            <SelectValue placeholder="Select category..." />
-                                          </SelectTrigger>
-                                          <SelectContent>
-                                            {categories.map((cat) => (
-                                              <SelectItem key={cat} value={cat}>
-                                                {cat}
-                                              </SelectItem>
-                                            ))}
-                                            <SelectItem
-                                              value="__new__"
-                                              className="font-semibold text-blue-600"
-                                            >
-                                              + Add New Category
-                                            </SelectItem>
-                                          </SelectContent>
-                                        </Select>
-                                      </div>
-                                    ) : (
-                                      <div className="space-y-2">
-                                        <Input
-                                          type="text"
-                                          value={editCustomCategory}
-                                          onChange={(e) =>
-                                            setEditCustomCategory(
-                                              e.target.value
-                                            )
-                                          }
-                                          placeholder="Enter new category"
-                                        />
-                                        <button
-                                          type="button"
-                                          onClick={() => {
-                                            setEditShowNewCategory(false);
-                                            setEditCustomCategory('');
-                                          }}
-                                          className="text-sm text-gray-600 hover:text-gray-800 underline"
-                                        >
-                                          ← Back to existing categories
-                                        </button>
-                                      </div>
-                                    )}
-                                    <div className="flex gap-2">
-                                      <Button
-                                        onClick={handleSaveEdit}
-                                        variant="default"
-                                        className="flex-1 bg-green-400 hover:bg-green-500 text-white"
-                                        disabled={isLoading}
-                                      >
-                                        {isLoading ? (
-                                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        ) : (
-                                          <Save className="mr-2 h-4 w-4" />
-                                        )}
-                                        Save
-                                      </Button>
-                                      <Button
-                                        onClick={handleCancelEdit}
-                                        variant="secondary"
-                                        className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700"
-                                      >
-                                        <X className="mr-2 h-4 w-4" />
-                                        Cancel
-                                      </Button>
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <div className="flex items-start gap-3">
-                                    <div className="flex items-start flex-1 min-w-0 pt-1">
-                                      <Checkbox
-                                        checked={item.is_active}
-                                        className="shrink-0 pointer-events-none"
-                                      />
-                                      <div className="ml-3 flex-1 min-w-0">
-                                        <span className="text-base sm:text-lg text-gray-700 block">
-                                          {item.name}
-                                        </span>
-                                      </div>
-                                    </div>
-                                    <div
-                                      className="flex gap-2 shrink-0"
-                                      onClick={(e) => e.stopPropagation()}
-                                    >
-                                      <Button
-                                        onClick={() => handleEdit(item)}
-                                        variant="secondary"
-                                        size="sm"
-                                        className="bg-gray-100 hover:bg-gray-200 text-gray-700 border-0"
-                                      >
-                                        <Edit2 className="h-4 w-4" />
-                                      </Button>
-                                      <Button
-                                        onClick={() => handleDelete(item.id)}
-                                        variant="destructive"
-                                        size="sm"
-                                        className="bg-rose-200 hover:bg-rose-300 text-rose-700"
-                                      >
-                                        <Trash2 className="h-4 w-4" />
-                                      </Button>
-                                    </div>
-                                  </div>
-                                )}
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </article>
-                    );
-                  })}
+                      .map(([category, categoryItems]) => (
+                        <CategoryGroup
+                          key={category}
+                          category={category}
+                          items={categoryItems}
+                          isExpanded={expandedCategories.has(category)}
+                          categories={categories}
+                          onToggleCategory={toggleCategory}
+                          onRenameCategory={handleRenameCategory}
+                          onDeleteCategory={handleDeleteCategory}
+                          onToggleActive={handleToggleActive}
+                          onDeleteItem={handleDelete}
+                          onUpdateItem={handleUpdateItem}
+                          isLoading={isLoading}
+                        />
+                      ))}
               </section>
 
               {items.length === 0 && <EmptyList />}
@@ -1036,264 +641,74 @@ export default function EverydayItems() {
       )}
 
       {/* Export Dialog */}
-      <AlertDialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
-        <AlertDialogContent className="max-w-2xl">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Backup Your Items</AlertDialogTitle>
-            <AlertDialogDescription>
-              Copy the text below to save all your items. You can restore this
-              backup later on any device.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <div className="my-4">
-            <textarea
-              value={exportedData}
-              readOnly
-              className="w-full h-32 p-3 border border-gray-300 rounded-lg font-mono text-sm bg-gray-50"
-              onClick={(e) => e.currentTarget.select()}
-            />
-          </div>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setExportedData('')}>
-              Close
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleCopyExport}
-              className="bg-green-500 hover:bg-green-600 text-white"
-            >
-              Copy to Clipboard
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ExportDialog
+        open={exportDialogOpen}
+        onOpenChange={setExportDialogOpen}
+        exportedData={exportedData}
+        onCopy={handleCopyExport}
+        onClose={() => setExportedData('')}
+      />
 
       {/* Import Dialog */}
-      <AlertDialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
-        <AlertDialogContent className="max-w-2xl">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Restore Your Items</AlertDialogTitle>
-            <AlertDialogDescription>
-              Paste your backup text below.{' '}
-              <strong className="text-red-600">Warning:</strong> This will
-              replace all current items with the backup.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <div className="my-4">
-            <textarea
-              value={importData}
-              onChange={(e) => setImportData(e.target.value)}
-              placeholder="Paste your backup code here..."
-              className="w-full h-32 p-3 border border-gray-300 rounded-lg font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setImportData('')}>
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmImport}
-              className="bg-blue-500 hover:bg-blue-600 text-white"
-              disabled={isLoading}
-            >
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Restore Items
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ImportDialog
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
+        importData={importData}
+        onImportDataChange={setImportData}
+        onConfirm={confirmImport}
+        onCancel={() => setImportData('')}
+        isLoading={isBulkOperationLoading}
+      />
 
       {/* Rename Category Dialog */}
-      <AlertDialog
+      <RenameCategoryDialog
         open={renameCategoryDialogOpen}
         onOpenChange={setRenameCategoryDialogOpen}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Rename Category</AlertDialogTitle>
-            <AlertDialogDescription>
-              Enter a new name for the category{' '}
-              <strong className="text-gray-900">"{categoryToRename}"</strong>.
-              <br />
-              All {itemsByCategory[categoryToRename || '']?.length || 0} item
-              {itemsByCategory[categoryToRename || '']?.length !== 1
-                ? 's'
-                : ''}{' '}
-              will be moved to the new category.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <div className="my-4">
-            <Input
-              type="text"
-              value={newCategoryName}
-              onChange={(e) => setNewCategoryName(e.target.value)}
-              placeholder="Enter new category name"
-              autoFocus
-            />
-          </div>
-          <AlertDialogFooter>
-            <AlertDialogCancel
-              onClick={() => {
-                setCategoryToRename(null);
-                setNewCategoryName('');
-              }}
-            >
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmRenameCategory}
-              className="bg-blue-500 hover:bg-blue-600 text-white"
-              disabled={isLoading}
-            >
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Rename Category
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        onConfirm={confirmRenameCategory}
+        categoryName={categoryToRename}
+        newCategoryName={newCategoryName}
+        onNewCategoryNameChange={setNewCategoryName}
+        itemCount={itemsByCategory[categoryToRename || '']?.length || 0}
+        isLoading={isBulkOperationLoading}
+      />
 
       {/* Delete Category Dialog */}
-      <AlertDialog
+      <DeleteCategoryDialog
         open={deleteCategoryDialogOpen}
         onOpenChange={setDeleteCategoryDialogOpen}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Category</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete the category{' '}
-              <strong className="text-gray-900">"{categoryToDelete}"</strong>?
-              <br />
-              <br />
-              <strong className="text-red-600">Warning:</strong> This will
-              permanently delete all{' '}
-              {itemsByCategory[categoryToDelete || '']?.length || 0} item
-              {itemsByCategory[categoryToDelete || '']?.length !== 1
-                ? 's'
-                : ''}{' '}
-              in this category. This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogAction
-              onClick={confirmDeleteCategory}
-              className="bg-rose-500 hover:bg-rose-600 text-white"
-              disabled={isLoading}
-            >
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Delete Category & Items
-            </AlertDialogAction>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        onConfirm={confirmDeleteCategory}
+        categoryName={categoryToDelete}
+        itemCount={itemsByCategory[categoryToDelete || '']?.length || 0}
+        isLoading={isLoading}
+      />
 
       {/* Delete Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Item</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this item? This action cannot be
-              undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogAction
-              onClick={confirmDelete}
-              className="bg-rose-500 hover:bg-rose-600 text-white"
-              disabled={isLoading}
-            >
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Delete
-            </AlertDialogAction>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteItemDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={confirmDelete}
+        isLoading={isLoading}
+      />
 
       {/* Delete All Dialog */}
-      <AlertDialog
+      <DeleteAllDialog
         open={deleteAllDialogOpen}
         onOpenChange={setDeleteAllDialogOpen}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete All Items</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete{' '}
-              <strong className="text-gray-900">
-                all {items.length} items
-              </strong>
-              ?
-              <br />
-              <br />
-              <strong className="text-red-600">Warning:</strong> This will
-              permanently delete all everyday items in all categories. This
-              action cannot be undone.
-              <br />
-              <br />
-              Consider creating a backup first.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogAction
-              onClick={handleDeleteAll}
-              className="bg-rose-500 hover:bg-rose-600 text-white"
-              disabled={isLoading}
-            >
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Delete All Items
-            </AlertDialogAction>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        onConfirm={handleDeleteAll}
+        itemCount={items.length}
+        isLoading={isLoading}
+      />
 
       {/* Import CSV Dialog */}
-      <AlertDialog open={importCSVDialogOpen} onOpenChange={setImportCSVDialogOpen}>
-        <AlertDialogContent className="max-w-2xl">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Import Items from CSV</AlertDialogTitle>
-            <AlertDialogDescription>
-              Select a CSV file to import. The file must have "item_name" and "category" columns.
-              <br />
-              <br />
-              <strong className="text-gray-900">Note:</strong> Items will be added to your existing list. Duplicates will be skipped.
-              <br />
-              <br />
-              Download the CSV template if you need a starting point.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <div className="my-4">
-            <div className="flex flex-col gap-3">
-              <Input
-                type="file"
-                accept=".csv"
-                onChange={handleCSVFileChange}
-                className="cursor-pointer"
-              />
-              {csvFile && (
-                <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded border border-gray-200">
-                  <strong>Selected file:</strong> {csvFile.name} ({(csvFile.size / 1024).toFixed(1)} KB)
-                </div>
-              )}
-            </div>
-          </div>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setCSVFile(null)}>
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmImportCSV}
-              className="bg-orange-500 hover:bg-orange-600 text-white"
-              disabled={isBulkOperationLoading || !csvFile}
-            >
-              {isBulkOperationLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Import Items
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ImportCSVDialog
+        open={importCSVDialogOpen}
+        onOpenChange={setImportCSVDialogOpen}
+        csvFile={csvFile}
+        onFileChange={handleCSVFileChange}
+        onConfirm={confirmImportCSV}
+        onCancel={() => setCSVFile(null)}
+        isLoading={isBulkOperationLoading}
+      />
     </main>
   );
 }
