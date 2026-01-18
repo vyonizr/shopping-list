@@ -54,6 +54,7 @@ export default function EverydayItems() {
   const [newCategoryName, setNewCategoryName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isBulkOperationLoading, setIsBulkOperationLoading] = useState(false);
+  const [deleteAllDialogOpen, setDeleteAllDialogOpen] = useState(false);
 
   // Query all items from IndexedDB
   const items = useLiveQuery(() => db.items.toArray()) || [];
@@ -440,13 +441,32 @@ export default function EverydayItems() {
     }
   };
 
+  const handleDeleteAll = async () => {
+    setIsLoading(true);
+    try {
+      const itemCount = items.length;
+      await db.items.clear();
+      setDeleteAllDialogOpen(false);
+      toast.success(`All ${itemCount} items deleted successfully`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-20 sm:pb-8">
       <header className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 sm:mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-700">Everyday Items</h1>
 
-        {/* Import/Export Buttons */}
         <nav className="flex gap-2 flex-wrap">
+          <Button
+            onClick={() => setDeleteAllDialogOpen(true)}
+            variant="outline"
+            className="border-rose-200 text-rose-600 hover:bg-rose-50 hover:border-rose-300"
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            Delete All
+          </Button>
           <Button
             onClick={handleImportDatabase}
             variant="outline"
@@ -902,6 +922,33 @@ export default function EverydayItems() {
             >
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Delete
+            </AlertDialogAction>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete All Dialog */}
+      <AlertDialog open={deleteAllDialogOpen} onOpenChange={setDeleteAllDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete All Items</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete <strong className="text-gray-900">all {items.length} items</strong>?
+              <br /><br />
+              <strong className="text-red-600">Warning:</strong> This will permanently delete all everyday items in all categories. This action cannot be undone.
+              <br /><br />
+              Consider creating a backup first.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction
+              onClick={handleDeleteAll}
+              className="bg-rose-500 hover:bg-rose-600 text-white"
+              disabled={isLoading}
+            >
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Delete All Items
             </AlertDialogAction>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
           </AlertDialogFooter>
