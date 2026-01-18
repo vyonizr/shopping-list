@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import { Clipboard, CheckCircle, ChevronDown, ChevronRight, Plus, Save, X, Pencil, Loader2 } from 'lucide-react';
+import { Clipboard, CheckCircle, ChevronDown, ChevronRight, Save, X, Loader2, NotebookPen } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -356,13 +356,13 @@ export default function ShoppingSession() {
                                   >
                                     {sessionNote ? (
                                       <>
-                                        <Pencil className="mr-1 h-3 w-3" />
-                                        <span className="hidden sm:inline">Edit Note</span>
+                                        <NotebookPen className="h-3 w-3" />
+                                        <span className="ml-1 hidden sm:inline">Edit Note</span>
                                       </>
                                     ) : (
                                       <>
-                                        <Plus className="mr-1 h-3 w-3" />
-                                        <span className="hidden sm:inline">Add Note</span>
+                                        <NotebookPen className="h-3 w-3" />
+                                        <span className="ml-1 hidden sm:inline">Add Note</span>
                                       </>
                                     )}
                                   </Button>
