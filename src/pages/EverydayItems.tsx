@@ -25,6 +25,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { compressData, decompressData } from '@/utils/compression';
+import EmptyList from '@/components/modules/EmptyList';
 
 export default function EverydayItems() {
   const [newItemName, setNewItemName] = useState('');
@@ -761,15 +762,7 @@ export default function EverydayItems() {
               </section>
 
               {items.length === 0 && (
-                <section className="text-center py-16 sm:py-20">
-                  <div className="text-gray-400 mb-4">
-                    <svg className="mx-auto h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                    </svg>
-                  </div>
-                  <p className="text-lg text-gray-500 mb-2">No items yet</p>
-                  <p className="text-sm text-gray-400">Add your first item above to get started!</p>
-                </section>
+                <EmptyList />
               )}
 
               {items.length > 0 && filteredItems.length === 0 && (
