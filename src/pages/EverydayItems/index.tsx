@@ -42,6 +42,7 @@ import { compressData, decompressData } from '@/utils/compression';
 import EmptyList from '@/components/modules/EmptyList';
 import SearchBar from '@/components/modules/SearchBar';
 import SelectAllButton from './components/SelectAllButton';
+import { cn } from '@/lib/utils';
 
 export default function EverydayItems() {
   const [newItemName, setNewItemName] = useState('');
@@ -755,11 +756,12 @@ export default function EverydayItems() {
                             {categoryItems.map((item) => (
                               <li
                                 key={item.id}
-                                className={`p-4 sm:p-5 transition-colors cursor-pointer ${
+                                className={cn(
+                                  'p-4 sm:p-5 transition-colors cursor-pointer',
                                   item.is_active
                                     ? 'bg-blue-50'
                                     : 'bg-white hover:bg-blue-50'
-                                }`}
+                                )}
                                 onClick={() =>
                                   handleToggleActive(
                                     item.id,
@@ -1007,7 +1009,9 @@ export default function EverydayItems() {
               <strong className="text-gray-900">"{categoryToRename}"</strong>.
               <br />
               All {itemsByCategory[categoryToRename || '']?.length || 0} item
-              {itemsByCategory[categoryToRename || '']?.length !== 1 ? 's' : ''}{' '}
+              {itemsByCategory[categoryToRename || '']?.length !== 1
+                ? 's'
+                : ''}{' '}
               will be moved to the new category.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -1057,7 +1061,9 @@ export default function EverydayItems() {
               <strong className="text-red-600">Warning:</strong> This will
               permanently delete all{' '}
               {itemsByCategory[categoryToDelete || '']?.length || 0} item
-              {itemsByCategory[categoryToDelete || '']?.length !== 1 ? 's' : ''}{' '}
+              {itemsByCategory[categoryToDelete || '']?.length !== 1
+                ? 's'
+                : ''}{' '}
               in this category. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>

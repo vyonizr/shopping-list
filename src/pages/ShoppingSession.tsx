@@ -26,6 +26,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { cn } from '@/lib/utils';
 
 export default function ShoppingSession() {
   const [inCartIds, setInCartIds] = useState<Set<number>>(new Set());
@@ -338,11 +339,12 @@ export default function ShoppingSession() {
                           return (
                             <li
                               key={item.id}
-                              className={`p-4 sm:p-5 transition-all ${
+                              className={cn(
+                                'p-4 sm:p-5 transition-all',
                                 isInCart
                                   ? 'bg-gray-50'
                                   : 'bg-white hover:bg-blue-50'
-                              }`}
+                              )}
                             >
                               {isEditingNote ? (
                                 <div
@@ -396,11 +398,12 @@ export default function ShoppingSession() {
                                   />
                                   <div className="flex-1 min-w-0 cursor-pointer">
                                     <span
-                                      className={`text-base sm:text-lg block transition-all ${
+                                      className={cn(
+                                        'text-base sm:text-lg block transition-all',
                                         isInCart
                                           ? 'line-through text-gray-400'
                                           : 'text-gray-700'
-                                      }`}
+                                      )}
                                     >
                                       {item.name}
                                     </span>
@@ -410,11 +413,12 @@ export default function ShoppingSession() {
                                           📝
                                         </span>
                                         <span
-                                          className={`text-sm transition-all ${
+                                          className={cn(
+                                            'text-sm transition-all',
                                             isInCart
                                               ? 'line-through text-gray-400'
                                               : 'text-gray-500'
-                                          }`}
+                                          )}
                                         >
                                           {sessionNote}
                                         </span>
@@ -429,11 +433,12 @@ export default function ShoppingSession() {
                                       onClick={() => handleAddNote(item.id)}
                                       variant="secondary"
                                       size="sm"
-                                      className={`${
+                                      className={cn(
+                                        'border-0',
                                         sessionNote
                                           ? 'bg-blue-100 hover:bg-blue-200 text-blue-700'
                                           : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                                      } border-0`}
+                                      )}
                                     >
                                       {sessionNote ? (
                                         <>

@@ -42,6 +42,7 @@ Violations of these rules are considered bugs.
 - **Typography**: Serif fonts (ui-serif, Georgia, Times) configured in Tailwind
 
 Do NOT introduce:
+
 - Redux, Zustand, MobX, or similar global state libraries
 - Backend APIs, authentication, or server dependencies
 - Analytics or telemetry
@@ -91,6 +92,7 @@ npm run test:ui  # Run tests with Vitest UI
 - Derived data must be **computed at render time**, never stored.
 
 **Examples**:
+
 - Shopping list (Page B) = `SELECT * FROM items WHERE is_active = true`
 - WhatsApp export text = computed from current DB state in render
 
@@ -106,26 +108,27 @@ npm run test:ui  # Run tests with Vitest UI
 - Use explicit field names (`is_active`, `is_in_cart`) over generic flags.
 
 **Actual Schema** (implemented in src/db/schema.ts):
+
 ```typescript
 interface Item {
-  id?: number;         // Auto-incremented by Dexie
+  id?: number; // Auto-incremented by Dexie
   name: string;
-  category: string;    // User-defined, free-form text
-  is_active: boolean;  // Selected for current shopping trip
-  created_at: number;  // Unix timestamp
+  category: string; // User-defined, free-form text
+  is_active: boolean; // Selected for current shopping trip
+  created_at: number; // Unix timestamp
 }
 
 interface Category {
-  id?: number;         // Auto-incremented by Dexie
-  name: string;        // User creates categories on-the-fly
-  created_at: number;  // Unix timestamp
+  id?: number; // Auto-incremented by Dexie
+  name: string; // User creates categories on-the-fly
+  created_at: number; // Unix timestamp
 }
 
 interface SessionNote {
-  id?: number;         // Auto-incremented by Dexie
-  item_id: number;     // Foreign key to Item.id
-  note: string;        // User note during shopping session
-  created_at: number;  // Unix timestamp
+  id?: number; // Auto-incremented by Dexie
+  item_id: number; // Foreign key to Item.id
+  note: string; // User note during shopping session
+  created_at: number; // Unix timestamp
 }
 
 // Database version 1: items, categories
@@ -133,6 +136,7 @@ interface SessionNote {
 ```
 
 **Category Rules**:
+
 - Categories are **user-defined**, not hardcoded
 - Use a **dropdown/datalist** showing existing categories with ability to type new category
 - Users can create new categories on-the-fly when adding/editing items
@@ -185,6 +189,7 @@ interface SessionNote {
 ## Implemented Features Reference
 
 ### Page A: Everyday Items
+
 1. **Item Management**: Add, edit, delete items with duplicate detection
 2. **Categories**: User-defined categories with dropdown + free-form input
 3. **Selection**: Checkbox to mark items for shopping (`is_active` flag)
@@ -197,6 +202,7 @@ interface SessionNote {
 10. **Loading States**: Spinners for async operations
 
 ### Page B: Shopping Session
+
 1. **Active Items Only**: Displays items where `is_active = true`
 2. **In-Cart Tracking**: In-memory Set (not persisted to DB)
 3. **Session Notes**: Per-item notes stored in `sessionNotes` table
@@ -206,6 +212,7 @@ interface SessionNote {
 7. **Category Grouping**: Same collapsible UI as Page A
 
 ### Technical Implementation
+
 - **IndexedDB**: 3 tables (items, categories, sessionNotes) via Dexie.js
 - **Live Queries**: `useLiveQuery` hook for reactive UI updates
 - **Optimistic UI**: Instant feedback with async DB writes
@@ -224,6 +231,7 @@ interface SessionNote {
 - **No magic constants** - define named constants for DB keys, event types.
 
 **Decision Heuristic**: When ambiguous, choose:
+
 > Simpler + more explicit + easier to reason about offline
 
 End of instructions.
