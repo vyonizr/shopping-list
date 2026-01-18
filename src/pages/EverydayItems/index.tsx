@@ -27,6 +27,8 @@ import {
   FolderEdit,
   Loader2,
   Square,
+  FileSpreadsheet,
+  FileDown,
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -43,6 +45,7 @@ import EmptyList from '@/components/modules/EmptyList';
 import SearchBar from '@/components/modules/SearchBar';
 import SelectAllButton from './components/SelectAllButton';
 import { cn } from '@/lib/utils';
+import { generateCSVTemplate, parseCSV, downloadFile } from '@/utils/csv';
 
 export default function EverydayItems() {
   const [newItemName, setNewItemName] = useState('');
@@ -76,6 +79,8 @@ export default function EverydayItems() {
   const [isLoading, setIsLoading] = useState(false);
   const [isBulkOperationLoading, setIsBulkOperationLoading] = useState(false);
   const [deleteAllDialogOpen, setDeleteAllDialogOpen] = useState(false);
+  const [importCSVDialogOpen, setImportCSVDialogOpen] = useState(false);
+  const [csvFile, setCSVFile] = useState<File | null>(null);
 
   // Query all items from IndexedDB
   const items = useLiveQuery(() => db.items.toArray()) || [];
@@ -509,6 +514,91 @@ export default function EverydayItems() {
     }
   };
 
+  const handleDownloadTemplate = () => {
+    const template = generateCSVTemplate();
+    downloadFile(template, 'shopping-list-template.csv');
+    toast.success('CSV template downloaded');
+  };
+
+  const handleImportCSV = () => {
+    setCSVFile(null);
+    setImportCSVDialogOpen(true);
+  };
+
+  const handleCSVFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.name.endsWith('.csv')) {
+        toast.error('Please select a CSV file');
+        return;
+      }
+      setCSVFile(file);
+    }
+  };
+
+  const confirmImportCSV = async () => {
+    if (!csvFile) {
+      toast.error('Please select a CSV file');
+      return;
+    }
+
+    setIsBulkOperationLoading(true);
+    try {
+      // Read file content
+      const csvText = await csvFile.text();
+
+      // Parse CSV
+      const parsedItems = parseCSV(csvText);
+
+      // Import items (add to existing, don't clear)
+      let imported = 0;
+      let skipped = 0;
+
+      for (const item of parsedItems) {
+        // Check for duplicate
+        const duplicate = await db.items
+          .filter(
+            (dbItem) =>
+              dbItem.name.toLowerCase() === item.name.toLowerCase() &&
+              dbItem.category.toLowerCase() === item.category.toLowerCase()
+          )
+          .first();
+
+        if (duplicate) {
+          skipped++;
+          continue;
+        }
+
+        await db.items.add({
+          name: item.name,
+          category: item.category,
+          is_active: false,
+          created_at: Date.now(),
+        });
+        imported++;
+      }
+
+      setImportCSVDialogOpen(false);
+      setCSVFile(null);
+
+      if (imported > 0) {
+        toast.success(
+          `Successfully imported ${imported} item${imported !== 1 ? 's' : ''}` +
+          (skipped > 0 ? ` (${skipped} duplicate${skipped !== 1 ? 's' : ''} skipped)` : '')
+        );
+      } else if (skipped > 0) {
+        toast.info(`All ${skipped} items already exist (duplicates skipped)`);
+      }
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to import CSV';
+      toast.error(errorMessage);
+      console.error('CSV Import Error:', error);
+    } finally {
+      setIsBulkOperationLoading(false);
+    }
+  };
+
   return (
     <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-20 sm:pb-8">
       <header className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 sm:mb-8">
@@ -524,6 +614,22 @@ export default function EverydayItems() {
           >
             <Trash2 className="mr-2 h-4 w-4" />
             Delete All
+          </Button>
+          <Button
+            onClick={handleDownloadTemplate}
+            variant="outline"
+            className="border-purple-200 text-purple-600 hover:bg-purple-50 hover:border-purple-300"
+          >
+            <FileDown className="mr-2 h-4 w-4" />
+            CSV Template
+          </Button>
+          <Button
+            onClick={handleImportCSV}
+            variant="outline"
+            className="border-orange-200 text-orange-600 hover:bg-orange-50 hover:border-orange-300"
+          >
+            <FileSpreadsheet className="mr-2 h-4 w-4" />
+            Import CSV
           </Button>
           <Button
             onClick={handleImportDatabase}
@@ -1139,6 +1245,52 @@ export default function EverydayItems() {
               Delete All Items
             </AlertDialogAction>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Import CSV Dialog */}
+      <AlertDialog open={importCSVDialogOpen} onOpenChange={setImportCSVDialogOpen}>
+        <AlertDialogContent className="max-w-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Import Items from CSV</AlertDialogTitle>
+            <AlertDialogDescription>
+              Select a CSV file to import. The file must have "item_name" and "category" columns.
+              <br />
+              <br />
+              <strong className="text-gray-900">Note:</strong> Items will be added to your existing list. Duplicates will be skipped.
+              <br />
+              <br />
+              Download the CSV template if you need a starting point.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="my-4">
+            <div className="flex flex-col gap-3">
+              <Input
+                type="file"
+                accept=".csv"
+                onChange={handleCSVFileChange}
+                className="cursor-pointer"
+              />
+              {csvFile && (
+                <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded border border-gray-200">
+                  <strong>Selected file:</strong> {csvFile.name} ({(csvFile.size / 1024).toFixed(1)} KB)
+                </div>
+              )}
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setCSVFile(null)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmImportCSV}
+              className="bg-orange-500 hover:bg-orange-600 text-white"
+              disabled={isBulkOperationLoading || !csvFile}
+            >
+              {isBulkOperationLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Import Items
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
