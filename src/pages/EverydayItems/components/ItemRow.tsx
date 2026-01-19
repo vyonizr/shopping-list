@@ -16,7 +16,11 @@ import { cn } from '@/lib/utils';
 interface ItemRowProps {
   item: Item;
   categories: string[];
-  onToggleActive: (id: number | undefined, currentState: boolean, itemName: string) => void;
+  onToggleActive: (
+    id: number | undefined,
+    currentState: boolean,
+    itemName: string
+  ) => void;
   onDelete: (id: number | undefined) => void;
   onUpdate: (id: number, name: string, category: string) => Promise<void>;
   isLoading: boolean;

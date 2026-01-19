@@ -41,8 +41,8 @@ export function RenameCategoryDialog({
             Enter a new name for the category{' '}
             <strong className="text-gray-900">"{categoryName}"</strong>.
             <br />
-            All {itemCount} item{itemCount !== 1 ? 's' : ''} will be moved to the
-            new category.
+            All {itemCount} item{itemCount !== 1 ? 's' : ''} will be moved to
+            the new category.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <div className="my-4">

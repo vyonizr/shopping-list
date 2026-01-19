@@ -11,7 +11,11 @@ interface CategoryGroupProps {
   onToggleCategory: (category: string) => void;
   onRenameCategory: (category: string) => void;
   onDeleteCategory: (category: string) => void;
-  onToggleActive: (id: number | undefined, currentState: boolean, itemName: string) => void;
+  onToggleActive: (
+    id: number | undefined,
+    currentState: boolean,
+    itemName: string
+  ) => void;
   onDeleteItem: (id: number | undefined) => void;
   onUpdateItem: (id: number, name: string, category: string) => Promise<void>;
   isLoading: boolean;

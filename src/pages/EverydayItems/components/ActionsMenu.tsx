@@ -23,9 +23,7 @@ export default function ActionsMenu({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline">
-          Tools
-        </Button>
+        <Button variant="outline">Tools</Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-fit bg-white">
         {/* <DropdownMenuItem onClick={onDownloadTemplate}>
@@ -45,7 +43,10 @@ export default function ActionsMenu({
           <Download className="mr-2 h-4 w-4" />
           <span>Restore</span>
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={onDeleteAll} className="text-red-600 focus:text-red-600">
+        <DropdownMenuItem
+          onClick={onDeleteAll}
+          className="text-red-600 focus:text-red-600"
+        >
           <Trash2 className="mr-2 h-4 w-4" />
           <span>Delete All</span>
         </DropdownMenuItem>
