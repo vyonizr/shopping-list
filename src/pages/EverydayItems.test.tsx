@@ -204,4 +204,164 @@ describe('EverydayItems', () => {
       expect(screen.getByText('Croissant')).toBeInTheDocument();
     });
   });
+
+  it('renames an item successfully', async () => {
+    const user = userEvent.setup();
+    const { toast } = await import('sonner');
+    const { useLiveQuery } = await import('dexie-react-hooks');
+    const { waitFor } = await import('@testing-library/react');
+
+    // Mock useLiveQuery to return a test item
+    const mockItem = {
+      id: 1,
+      name: 'Milk',
+      category: 'Dairy',
+      is_active: false,
+      created_at: Date.now(),
+    };
+
+    let calls = 0;
+    vi.mocked(useLiveQuery).mockImplementation(() => {
+      calls++;
+      return calls % 2 === 1 ? [mockItem] : ['Dairy'];
+    });
+
+    render(<EverydayItems />);
+
+    // Wait for item to render
+    await waitFor(() => {
+      expect(screen.getByText('Milk')).toBeInTheDocument();
+    });
+
+    // Find and click the edit button (pencil icon)
+    const editButton = screen.getByTestId('edit-item-button-1');
+    await user.click(editButton);
+
+    // Wait for edit mode to activate
+    await waitFor(() => {
+      expect(screen.getByDisplayValue('Milk')).toBeInTheDocument();
+    });
+
+    // Clear and type new name
+    const nameInput = screen.getByDisplayValue('Milk');
+    await user.clear(nameInput);
+    await user.type(nameInput, 'Whole Milk');
+
+    // Click save button
+    const saveButton = screen.getByRole('button', { name: /save/i });
+    await user.click(saveButton);
+
+    // Verify database update was called
+    expect(db.items.update).toHaveBeenCalledWith(1, {
+      name: 'Whole Milk',
+      category: 'Dairy',
+    });
+
+    // Verify success toast
+    expect(toast.success).toHaveBeenCalledWith('Item updated successfully');
+  });
+
+  it('deletes an item after confirmation', async () => {
+    const user = userEvent.setup();
+    const { toast } = await import('sonner');
+    const { useLiveQuery } = await import('dexie-react-hooks');
+    const { waitFor } = await import('@testing-library/react');
+
+    // Mock useLiveQuery to return a test item
+    const mockItem = {
+      id: 1,
+      name: 'Expired Milk',
+      category: 'Dairy',
+      is_active: false,
+      created_at: Date.now(),
+    };
+
+    // Mock the delete method
+    vi.mocked(db.items).delete = vi.fn().mockResolvedValue(undefined);
+
+    let calls = 0;
+    vi.mocked(useLiveQuery).mockImplementation(() => {
+      calls++;
+      return calls % 2 === 1 ? [mockItem] : ['Dairy'];
+    });
+
+    render(<EverydayItems />);
+
+    // Wait for item to render
+    await waitFor(() => {
+      expect(screen.getByText('Expired Milk')).toBeInTheDocument();
+    });
+
+    // Find and click the delete button (trash icon)
+    const deleteButton = screen.getByTestId('delete-item-button-1');
+    await user.click(deleteButton);
+
+    // Wait for confirmation dialog
+    await waitFor(() => {
+      expect(
+        screen.getByText(/are you sure you want to delete this item/i)
+      ).toBeInTheDocument();
+    });
+
+    // Click confirm delete button in dialog
+    const confirmButton = screen.getByRole('button', { name: /delete$/i });
+    await user.click(confirmButton);
+
+    // Verify database delete was called
+    expect(db.items.delete).toHaveBeenCalledWith(1);
+
+    // Verify success toast
+    await waitFor(() => {
+      expect(toast.success).toHaveBeenCalledWith('Item deleted successfully');
+    });
+  });
+
+  it('cancels item deletion when user dismisses dialog', async () => {
+    const user = userEvent.setup();
+    const { useLiveQuery } = await import('dexie-react-hooks');
+    const { waitFor } = await import('@testing-library/react');
+
+    // Mock useLiveQuery to return a test item
+    const mockItem = {
+      id: 1,
+      name: 'Keep This Item',
+      category: 'Pantry',
+      is_active: false,
+      created_at: Date.now(),
+    };
+
+    // Mock the delete method
+    vi.mocked(db.items).delete = vi.fn().mockResolvedValue(undefined);
+
+    let calls = 0;
+    vi.mocked(useLiveQuery).mockImplementation(() => {
+      calls++;
+      return calls % 2 === 1 ? [mockItem] : ['Pantry'];
+    });
+
+    render(<EverydayItems />);
+
+    // Wait for item to render
+    await waitFor(() => {
+      expect(screen.getByText('Keep This Item')).toBeInTheDocument();
+    });
+
+    // Find and click the delete button
+    const deleteButton = screen.getByTestId('delete-item-button-1');
+    await user.click(deleteButton);
+
+    // Wait for confirmation dialog
+    await waitFor(() => {
+      expect(
+        screen.getByText(/are you sure you want to delete this item/i)
+      ).toBeInTheDocument();
+    });
+
+    // Click cancel button in dialog
+    const cancelButton = screen.getByRole('button', { name: /cancel/i });
+    await user.click(cancelButton);
+
+    // Verify database delete was NOT called
+    expect(db.items.delete).not.toHaveBeenCalled();
+  });
 });
