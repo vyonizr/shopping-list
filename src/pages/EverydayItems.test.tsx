@@ -1,5 +1,6 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { useLiveQuery } from 'dexie-react-hooks';
 import '@testing-library/jest-dom';
 import userEvent from '@testing-library/user-event';
 import EverydayItems from './EverydayItems';
@@ -91,8 +92,6 @@ describe('EverydayItems', () => {
   it('toggles item as active when checked', async () => {
     const user = userEvent.setup();
     const { toast } = await import('sonner');
-    const { useLiveQuery } = await import('dexie-react-hooks');
-    const { waitFor } = await import('@testing-library/react');
 
     // Mock useLiveQuery to return a test item
     const mockItem = {
@@ -142,8 +141,6 @@ describe('EverydayItems', () => {
 
   it('collapses and expands category on toggle click', async () => {
     const user = userEvent.setup();
-    const { useLiveQuery } = await import('dexie-react-hooks');
-    const { waitFor } = await import('@testing-library/react');
 
     // Mock useLiveQuery to return items in a category
     const mockItems = [
@@ -208,8 +205,6 @@ describe('EverydayItems', () => {
   it('renames an item successfully', async () => {
     const user = userEvent.setup();
     const { toast } = await import('sonner');
-    const { useLiveQuery } = await import('dexie-react-hooks');
-    const { waitFor } = await import('@testing-library/react');
 
     // Mock useLiveQuery to return a test item
     const mockItem = {
@@ -264,9 +259,6 @@ describe('EverydayItems', () => {
   it('deletes an item after confirmation', async () => {
     const user = userEvent.setup();
     const { toast } = await import('sonner');
-    const { useLiveQuery } = await import('dexie-react-hooks');
-    const { waitFor } = await import('@testing-library/react');
-
     // Mock useLiveQuery to return a test item
     const mockItem = {
       id: 1,
@@ -318,8 +310,6 @@ describe('EverydayItems', () => {
 
   it('cancels item deletion when user dismisses dialog', async () => {
     const user = userEvent.setup();
-    const { useLiveQuery } = await import('dexie-react-hooks');
-    const { waitFor } = await import('@testing-library/react');
 
     // Mock useLiveQuery to return a test item
     const mockItem = {
