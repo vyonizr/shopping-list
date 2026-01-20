@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type Item } from '../../db/schema';
 import { toast } from 'sonner';
@@ -28,6 +28,7 @@ export default function EverydayItems() {
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
     new Set()
   );
+  const [hasInitializedCategories, setHasInitializedCategories] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<number | undefined>(
     undefined
@@ -53,19 +54,28 @@ export default function EverydayItems() {
   const items = useLiveQuery(() => db.items.toArray()) || [];
 
   // Get unique categories for dropdown
-  const categories =
-    useLiveQuery(async () => {
-      const allItems = await db.items.toArray();
-      const uniqueCategories = [
-        ...new Set(allItems.map((item) => item.category)),
-      ]
-        .filter(Boolean)
-        .sort();
-      return uniqueCategories;
-    }) || [];
+  const categoriesQuery = useLiveQuery(async () => {
+    const allItems = await db.items.toArray();
+    const uniqueCategories = [
+      ...new Set(allItems.map((item) => item.category)),
+    ]
+      .filter(Boolean)
+      .sort();
+    return uniqueCategories;
+  });
+
+  const categories = useMemo(() => categoriesQuery || [], [categoriesQuery]);
 
   // Check if queries are still loading
-  const isQueryLoading = items === undefined || categories === undefined;
+  const isQueryLoading = items === undefined || categoriesQuery === undefined;
+
+  // Initialize all categories as expanded on first render
+  useEffect(() => {
+    if (!hasInitializedCategories && categories.length > 0) {
+      setExpandedCategories(new Set(categories));
+      setHasInitializedCategories(true);
+    }
+  }, [categories, hasInitializedCategories]);
 
   // Filter items based on search query
   const filteredItems = items.filter((item) => {
@@ -88,16 +98,6 @@ export default function EverydayItems() {
     },
     {} as Record<string, Item[]>
   );
-
-  // Initialize all categories as expanded on first render
-  useEffect(() => {
-    if (
-      expandedCategories.size === 0 &&
-      Object.keys(itemsByCategory).length > 0
-    ) {
-      setExpandedCategories(new Set(Object.keys(itemsByCategory)));
-    }
-  }, [itemsByCategory, expandedCategories.size]);
 
   const toggleCategory = (category: string) => {
     setExpandedCategories((prev) => {

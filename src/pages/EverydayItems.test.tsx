@@ -139,4 +139,69 @@ describe('EverydayItems', () => {
       { timeout: 1500 }
     );
   });
+
+  it('collapses and expands category on toggle click', async () => {
+    const user = userEvent.setup();
+    const { useLiveQuery } = await import('dexie-react-hooks');
+    const { waitFor } = await import('@testing-library/react');
+
+    // Mock useLiveQuery to return items in a category
+    const mockItems = [
+      {
+        id: 1,
+        name: 'Bread',
+        category: 'Bakery',
+        is_active: false,
+        created_at: Date.now(),
+      },
+      {
+        id: 2,
+        name: 'Croissant',
+        category: 'Bakery',
+        is_active: false,
+        created_at: Date.now(),
+      },
+    ];
+
+    // Set up mock BEFORE rendering - alternate between items and categories
+    let calls = 0;
+    vi.mocked(useLiveQuery).mockImplementation(() => {
+      calls++;
+      // Odd calls = items, Even calls = categories
+      return calls % 2 === 1 ? mockItems : ['Bakery'];
+    });
+
+    render(<EverydayItems />);
+
+    // Wait for items to be rendered (category starts expanded after initialization)
+    await waitFor(
+      () => {
+        expect(screen.getByText('Bread')).toBeInTheDocument();
+        expect(screen.getByText('Croissant')).toBeInTheDocument();
+      },
+      { timeout: 3000 }
+    );
+
+    // Find the category header button
+    const categoryHeading = screen.getByTestId('category-heading-Bakery');
+    expect(categoryHeading).toBeInTheDocument();
+
+    // Click to collapse
+    await user.click(categoryHeading);
+
+    // Items should be hidden after collapse
+    await waitFor(() => {
+      expect(screen.queryByText('Bread')).not.toBeInTheDocument();
+      expect(screen.queryByText('Croissant')).not.toBeInTheDocument();
+    });
+
+    // Click again to expand
+    await user.click(categoryHeading);
+
+    // Items should be visible again after expand
+    await waitFor(() => {
+      expect(screen.getByText('Bread')).toBeInTheDocument();
+      expect(screen.getByText('Croissant')).toBeInTheDocument();
+    });
+  });
 });

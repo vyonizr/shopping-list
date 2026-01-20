@@ -19,7 +19,7 @@ export default function PageHeader({
     <header className="mb-6 sm:mb-8">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-          Shopping List
+          Everyday Items
         </h1>
         <ActionsMenu
           onDeleteAll={onDeleteAll}
