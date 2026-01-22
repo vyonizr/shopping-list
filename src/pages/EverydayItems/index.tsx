@@ -444,7 +444,7 @@ export default function EverydayItems() {
 
   const handleDownloadTemplate = () => {
     const template = generateCSVTemplate();
-    downloadFile(template, 'shopping-list-template.csv');
+    downloadFile(template, 'everyday-items-template.csv');
     toast.success('CSV template downloaded');
   };
 
