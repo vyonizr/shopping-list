@@ -3,7 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type Item } from '../../db/schema';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { Search, Loader2 } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { compressData, decompressData } from '@/utils/compression';
 import EmptyList from '@/components/modules/EmptyList';
 import SearchBar from '@/components/modules/SearchBar';
@@ -22,6 +22,7 @@ import {
 import { RenameCategoryDialog } from './components/RenameCategoryDialog';
 import { ImportCSVDialog } from './components/ImportCSVDialog';
 import ClearAllButton from './components/ClearAllButton';
+import Loading from './components/Loading';
 
 export default function EverydayItems() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -562,10 +563,7 @@ export default function EverydayItems() {
 
       {/* Loading State */}
       {isQueryLoading ? (
-        <section className="text-center py-16 sm:py-20">
-          <Loader2 className="mx-auto h-16 w-16 text-gray-400 animate-spin mb-4" />
-          <p className="text-lg text-gray-500">Loading your items...</p>
-        </section>
+        <Loading text={'Loading your items...'} />
       ) : (
         <>
             {/* Bulk Selection Controls */}
@@ -584,10 +582,7 @@ export default function EverydayItems() {
 
           {/* Bulk Operation Loading Overlay */}
           {isBulkOperationLoading ? (
-            <section className="text-center py-16 sm:py-20">
-              <Loader2 className="mx-auto h-16 w-16 text-blue-500 animate-spin mb-4" />
-              <p className="text-lg text-gray-600">Updating items...</p>
-            </section>
+              <Loading text={'Updating items...'} />
           ) : (
             <>
               {/* Items List Grouped by Category */}
