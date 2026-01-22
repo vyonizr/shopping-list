@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type Item } from '../../db/schema';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { Search, Loader2, Square } from 'lucide-react';
+import { Search, Loader2 } from 'lucide-react';
 import { compressData, decompressData } from '@/utils/compression';
 import EmptyList from '@/components/modules/EmptyList';
 import SearchBar from '@/components/modules/SearchBar';
@@ -21,12 +21,14 @@ import {
 } from './components/DeleteDialogs';
 import { RenameCategoryDialog } from './components/RenameCategoryDialog';
 import { ImportCSVDialog } from './components/ImportCSVDialog';
+import ClearAllButton from './components/ClearAllButton';
 
 export default function EverydayItems() {
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
     new Set()
   );
+  const [hasInitializedCategories, setHasInitializedCategories] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<number | undefined>(
     undefined
@@ -52,19 +54,28 @@ export default function EverydayItems() {
   const items = useLiveQuery(() => db.items.toArray()) || [];
 
   // Get unique categories for dropdown
-  const categories =
-    useLiveQuery(async () => {
-      const allItems = await db.items.toArray();
-      const uniqueCategories = [
-        ...new Set(allItems.map((item) => item.category)),
-      ]
-        .filter(Boolean)
-        .sort();
-      return uniqueCategories;
-    }) || [];
+  const categoriesQuery = useLiveQuery(async () => {
+    const allItems = await db.items.toArray();
+    const uniqueCategories = [
+      ...new Set(allItems.map((item) => item.category)),
+    ]
+      .filter(Boolean)
+      .sort();
+    return uniqueCategories;
+  });
+
+  const categories = useMemo(() => categoriesQuery || [], [categoriesQuery]);
 
   // Check if queries are still loading
-  const isQueryLoading = items === undefined || categories === undefined;
+  const isQueryLoading = items === undefined || categoriesQuery === undefined;
+
+  // Initialize all categories as expanded on first render
+  useEffect(() => {
+    if (!hasInitializedCategories && categories.length > 0) {
+      setExpandedCategories(new Set(categories));
+      setHasInitializedCategories(true);
+    }
+  }, [categories, hasInitializedCategories]);
 
   // Filter items based on search query
   const filteredItems = items.filter((item) => {
@@ -87,16 +98,6 @@ export default function EverydayItems() {
     },
     {} as Record<string, Item[]>
   );
-
-  // Initialize all categories as expanded on first render
-  useEffect(() => {
-    if (
-      expandedCategories.size === 0 &&
-      Object.keys(itemsByCategory).length > 0
-    ) {
-      setExpandedCategories(new Set(Object.keys(itemsByCategory)));
-    }
-  }, [itemsByCategory, expandedCategories.size]);
 
   const toggleCategory = (category: string) => {
     setExpandedCategories((prev) => {
@@ -123,9 +124,7 @@ export default function EverydayItems() {
         .first();
 
       if (duplicate) {
-        toast.error(
-          `Item "${name}" already exists in category "${category}"`
-        );
+        toast.error(`Item "${name}" already exists in category "${category}"`);
         return;
       }
 
@@ -165,7 +164,11 @@ export default function EverydayItems() {
     }
   };
 
-  const handleUpdateItem = async (id: number, name: string, category: string) => {
+  const handleUpdateItem = async (
+    id: number,
+    name: string,
+    category: string
+  ) => {
     setIsLoading(true);
     try {
       // Check for duplicate (excluding current item)
@@ -179,9 +182,7 @@ export default function EverydayItems() {
         .first();
 
       if (duplicate) {
-        toast.error(
-          `Item "${name}" already exists in category "${category}"`
-        );
+        toast.error(`Item "${name}" already exists in category "${category}"`);
         return;
       }
 
@@ -443,7 +444,7 @@ export default function EverydayItems() {
 
   const handleDownloadTemplate = () => {
     const template = generateCSVTemplate();
-    downloadFile(template, 'shopping-list-template.csv');
+    downloadFile(template, 'everyday-items-template.csv');
     toast.success('CSV template downloaded');
   };
 
@@ -511,7 +512,9 @@ export default function EverydayItems() {
       if (imported > 0) {
         toast.success(
           `Successfully imported ${imported} item${imported !== 1 ? 's' : ''}` +
-          (skipped > 0 ? ` (${skipped} duplicate${skipped !== 1 ? 's' : ''} skipped)` : '')
+          (skipped > 0
+            ? ` (${skipped} duplicate${skipped !== 1 ? 's' : ''} skipped)`
+            : '')
         );
       } else if (skipped > 0) {
         toast.info(`All ${skipped} items already exist (duplicates skipped)`);
@@ -565,29 +568,19 @@ export default function EverydayItems() {
         </section>
       ) : (
         <>
-          {/* Bulk Selection Controls */}
-          {filteredItems.length > 0 && (
-            <div className="flex gap-2 mb-4">
-              <SelectAllButton
-                onClick={handleSelectAll}
-                isLoading={isBulkOperationLoading}
-              />
-              <Button
-                onClick={handleClearAll}
-                variant="outline"
-                size="sm"
-                className="flex-1 border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300"
-                disabled={isBulkOperationLoading}
-              >
-                {isBulkOperationLoading ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Square className="mr-2 h-4 w-4" />
-                )}
-                Clear All
-              </Button>
-            </div>
-          )}
+            {/* Bulk Selection Controls */}
+            {filteredItems.length > 0 && (
+              <div className="flex gap-2 mb-4">
+                <SelectAllButton
+                  onClick={handleSelectAll}
+                  isLoading={isBulkOperationLoading}
+                />
+                <ClearAllButton
+                  handleClearAll={handleClearAll}
+                  isBulkOperationLoading={isBulkOperationLoading}
+                />
+              </div>
+            )}
 
           {/* Bulk Operation Loading Overlay */}
           {isBulkOperationLoading ? (

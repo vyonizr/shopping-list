@@ -10,11 +10,15 @@ export function generateCSVTemplate(): string {
  * Expected format: item_name,category
  * First row is header (skipped)
  */
-export function parseCSV(csvText: string): Array<{ name: string; category: string }> {
+export function parseCSV(
+  csvText: string
+): Array<{ name: string; category: string }> {
   const lines = csvText.trim().split('\n');
-  
+
   if (lines.length < 2) {
-    throw new Error('CSV file must contain at least a header row and one data row');
+    throw new Error(
+      'CSV file must contain at least a header row and one data row'
+    );
   }
 
   // Validate header
@@ -32,7 +36,7 @@ export function parseCSV(csvText: string): Array<{ name: string; category: strin
     if (!line) continue; // Skip empty lines
 
     const parts = parseCSVLine(line);
-    
+
     if (parts.length < 2) {
       errors.push(`Row ${i + 1}: Missing required columns`);
       continue;
@@ -97,7 +101,11 @@ function parseCSVLine(line: string): string[] {
 /**
  * Download a file with given content
  */
-export function downloadFile(content: string, filename: string, mimeType: string = 'text/csv') {
+export function downloadFile(
+  content: string,
+  filename: string,
+  mimeType: string = 'text/csv'
+) {
   const blob = new Blob([content], { type: mimeType });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');

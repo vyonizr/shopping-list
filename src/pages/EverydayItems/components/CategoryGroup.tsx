@@ -11,7 +11,11 @@ interface CategoryGroupProps {
   onToggleCategory: (category: string) => void;
   onRenameCategory: (category: string) => void;
   onDeleteCategory: (category: string) => void;
-  onToggleActive: (id: number | undefined, currentState: boolean, itemName: string) => void;
+  onToggleActive: (
+    id: number | undefined,
+    currentState: boolean,
+    itemName: string
+  ) => void;
   onDeleteItem: (id: number | undefined) => void;
   onUpdateItem: (id: number, name: string, category: string) => Promise<void>;
   isLoading: boolean;
@@ -35,6 +39,7 @@ export default function CategoryGroup({
       <div
         onClick={() => onToggleCategory(category)}
         className="w-full bg-blue-50 px-4 sm:px-6 py-3 border-b border-blue-100 hover:bg-blue-100 transition-colors text-left cursor-pointer"
+        data-testid={`category-heading-${category}`}
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 flex-1 min-w-0">

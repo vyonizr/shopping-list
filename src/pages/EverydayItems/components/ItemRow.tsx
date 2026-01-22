@@ -16,7 +16,11 @@ import { cn } from '@/lib/utils';
 interface ItemRowProps {
   item: Item;
   categories: string[];
-  onToggleActive: (id: number | undefined, currentState: boolean, itemName: string) => void;
+  onToggleActive: (
+    id: number | undefined,
+    currentState: boolean,
+    itemName: string
+  ) => void;
   onDelete: (id: number | undefined) => void;
   onUpdate: (id: number, name: string, category: string) => Promise<void>;
   isLoading: boolean;
@@ -178,6 +182,7 @@ export default function ItemRow({
               variant="secondary"
               size="sm"
               className="bg-gray-100 hover:bg-gray-200 text-gray-700 border-0"
+                data-testid={`edit-item-button-${item.id}`}
             >
               <Edit2 className="h-4 w-4" />
             </Button>
@@ -186,6 +191,7 @@ export default function ItemRow({
               variant="destructive"
               size="sm"
               className="bg-rose-200 hover:bg-rose-300 text-rose-700"
+                data-testid={`delete-item-button-${item.id}`}
             >
               <Trash2 className="h-4 w-4" />
             </Button>
