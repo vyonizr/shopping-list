@@ -23,14 +23,20 @@ import { RenameCategoryDialog } from './components/RenameCategoryDialog';
 import { ImportCSVDialog } from './components/ImportCSVDialog';
 import ClearAllButton from './components/ClearAllButton';
 import Loading from './components/Loading';
-import { DEFAULT_CATEGORY, EXPORT_VERSION, TOAST_MESSAGES, CSV_TEMPLATE_FILENAME } from '@/lib/constants';
+import {
+  DEFAULT_CATEGORY,
+  EXPORT_VERSION,
+  TOAST_MESSAGES,
+  CSV_TEMPLATE_FILENAME,
+} from '@/lib/constants';
 
 export default function EverydayItems() {
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
     new Set()
   );
-  const [hasInitializedCategories, setHasInitializedCategories] = useState(false);
+  const [hasInitializedCategories, setHasInitializedCategories] =
+    useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<number | undefined>(
     undefined
@@ -58,9 +64,7 @@ export default function EverydayItems() {
   // Get unique categories for dropdown
   const categoriesQuery = useLiveQuery(async () => {
     const allItems = await db.items.toArray();
-    const uniqueCategories = [
-      ...new Set(allItems.map((item) => item.category)),
-    ]
+    const uniqueCategories = [...new Set(allItems.map((item) => item.category))]
       .filter(Boolean)
       .sort();
     return uniqueCategories;
@@ -514,9 +518,9 @@ export default function EverydayItems() {
       if (imported > 0) {
         toast.success(
           `Successfully imported ${imported} item${imported !== 1 ? 's' : ''}` +
-          (skipped > 0
-            ? ` (${skipped} duplicate${skipped !== 1 ? 's' : ''} skipped)`
-            : '')
+            (skipped > 0
+              ? ` (${skipped} duplicate${skipped !== 1 ? 's' : ''} skipped)`
+              : '')
         );
       } else if (skipped > 0) {
         toast.info(`All ${skipped} items already exist (duplicates skipped)`);
@@ -567,45 +571,45 @@ export default function EverydayItems() {
         <Loading text={'Loading your items...'} />
       ) : (
         <>
-            {/* Bulk Selection Controls */}
-            {filteredItems.length > 0 && (
-              <div className="flex gap-2 mb-4">
-                <SelectAllButton
-                  onClick={handleSelectAll}
-                  isLoading={isBulkOperationLoading}
-                />
-                <ClearAllButton
-                  handleClearAll={handleClearAll}
-                  isBulkOperationLoading={isBulkOperationLoading}
-                />
-              </div>
-            )}
+          {/* Bulk Selection Controls */}
+          {filteredItems.length > 0 && (
+            <div className="flex gap-2 mb-4">
+              <SelectAllButton
+                onClick={handleSelectAll}
+                isLoading={isBulkOperationLoading}
+              />
+              <ClearAllButton
+                handleClearAll={handleClearAll}
+                isBulkOperationLoading={isBulkOperationLoading}
+              />
+            </div>
+          )}
 
           {/* Bulk Operation Loading Overlay */}
           {isBulkOperationLoading ? (
-              <Loading text={'Updating items...'} />
+            <Loading text={'Updating items...'} />
           ) : (
             <>
               {/* Items List Grouped by Category */}
               <section className="space-y-4 sm:space-y-6">
                 {Object.entries(itemsByCategory)
                   .sort()
-                      .map(([category, categoryItems]) => (
-                        <CategoryGroup
-                          key={category}
-                          category={category}
-                          items={categoryItems}
-                          isExpanded={expandedCategories.has(category)}
-                          categories={categories}
-                          onToggleCategory={toggleCategory}
-                          onRenameCategory={handleRenameCategory}
-                          onDeleteCategory={handleDeleteCategory}
-                          onToggleActive={handleToggleActive}
-                          onDeleteItem={handleDelete}
-                          onUpdateItem={handleUpdateItem}
-                          isLoading={isLoading}
-                        />
-                      ))}
+                  .map(([category, categoryItems]) => (
+                    <CategoryGroup
+                      key={category}
+                      category={category}
+                      items={categoryItems}
+                      isExpanded={expandedCategories.has(category)}
+                      categories={categories}
+                      onToggleCategory={toggleCategory}
+                      onRenameCategory={handleRenameCategory}
+                      onDeleteCategory={handleDeleteCategory}
+                      onToggleActive={handleToggleActive}
+                      onDeleteItem={handleDelete}
+                      onUpdateItem={handleUpdateItem}
+                      isLoading={isLoading}
+                    />
+                  ))}
               </section>
 
               {items.length === 0 && <EmptyList />}

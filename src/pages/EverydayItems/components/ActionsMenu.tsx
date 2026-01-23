@@ -5,7 +5,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { Trash2, FileDown, FileSpreadsheet, BookUp, BookDown } from 'lucide-react';
+import {
+  Trash2,
+  FileDown,
+  FileSpreadsheet,
+  BookUp,
+  BookDown,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ActionsMenuProps {
@@ -28,7 +34,12 @@ export default function ActionsMenu({
     { label: 'Import CSV', icon: FileSpreadsheet, action: onImportCSV },
     { label: 'Export as Code', icon: BookUp, action: onExportDatabase },
     { label: 'Import Code', icon: BookDown, action: onImportDatabase },
-    { label: 'Delete All', icon: Trash2, action: onDeleteAll, destructive: true },
+    {
+      label: 'Delete All',
+      icon: Trash2,
+      action: onDeleteAll,
+      destructive: true,
+    },
   ];
 
   return (
@@ -41,8 +52,10 @@ export default function ActionsMenu({
           <DropdownMenuItem
             key={label}
             onClick={action}
-            className={cn('hover:bg-gray-100 cursor-pointer',
-              destructive ? 'text-red-600 hover:bg-red-100' : '')}
+            className={cn(
+              'hover:bg-gray-100 cursor-pointer',
+              destructive ? 'text-red-600 hover:bg-red-100' : ''
+            )}
           >
             <Icon className="mr-2 h-4 w-4" />
             <span>{label}</span>

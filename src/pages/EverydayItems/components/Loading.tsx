@@ -1,7 +1,7 @@
-import { Loader2 } from "lucide-react";
+import { Loader2 } from 'lucide-react';
 
 interface LoadingProps {
-  text: string
+  text: string;
 }
 
 export default function Loading({ text }: LoadingProps) {
@@ -12,4 +12,3 @@ export default function Loading({ text }: LoadingProps) {
     </section>
   );
 }
-

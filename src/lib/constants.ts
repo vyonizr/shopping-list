@@ -9,6 +9,7 @@ export const TOAST_MESSAGES = {
   ITEM_UPDATED: 'Item updated successfully',
   ITEM_DELETED: 'Item deleted successfully',
   ITEM_FAILED_UPDATE: 'Failed to update item',
-  FAILED_IMPORT_DATABASE: 'Failed to import database. Please check the data format.',
+  FAILED_IMPORT_DATABASE:
+    'Failed to import database. Please check the data format.',
   PLEASE_SELECT_CSV_FILE: 'Please select a CSV file',
 };
