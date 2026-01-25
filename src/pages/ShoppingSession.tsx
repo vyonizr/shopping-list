@@ -15,6 +15,7 @@ import {
   X,
   Loader2,
   NotebookPen,
+  Search,
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -28,6 +29,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
 import BackToTop from '@/components/modules/BackToTop';
+import SearchBar from '@/components/modules/SearchBar';
 
 export default function ShoppingSession() {
   const [inCartIds, setInCartIds] = useState<Set<number>>(new Set());
@@ -41,6 +43,7 @@ export default function ShoppingSession() {
   const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
   const [tempNote, setTempNote] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const copyTextRef = useRef<HTMLDivElement>(null);
 
   // Query only active items (selected for shopping)
@@ -65,8 +68,17 @@ export default function ShoppingSession() {
   const isQueryLoading =
     activeItems === undefined || sessionNotes === undefined;
 
+  // Filter items based on search query
+  const filteredActiveItems = activeItems.filter((item) => {
+    const query = searchQuery.toLowerCase().trim();
+    return (
+      item.name.toLowerCase().includes(query) ||
+      item.category.toLowerCase().includes(query)
+    );
+  });
+
   // Group active items by category
-  const itemsByCategory = activeItems.reduce(
+  const itemsByCategory = filteredActiveItems.reduce(
     (acc, item) => {
       const category = item.category || 'Uncategorized';
       if (!acc[category]) {
@@ -173,10 +185,10 @@ export default function ShoppingSession() {
     });
   };
 
-  const itemsInCart = activeItems.filter((item) =>
+  const itemsInCart = filteredActiveItems.filter((item) =>
     inCartIds.has(item.id!)
   ).length;
-  const totalItems = activeItems.length;
+  const totalItems = filteredActiveItems.length;
 
   const handleAddNote = async (id: number | undefined) => {
     if (!id) return;
@@ -244,11 +256,6 @@ export default function ShoppingSession() {
         <h1 className="text-2xl sm:text-3xl font-bold text-gray-700">
           Shopping Session
         </h1>
-        <aside className="flex items-center gap-2 text-sm sm:text-base">
-          <div className="bg-blue-100 text-blue-700 px-3 py-1.5 rounded-full font-medium">
-            {itemsInCart} / {totalItems} in cart
-          </div>
-        </aside>
       </header>
 
       {isQueryLoading ? (
@@ -292,6 +299,7 @@ export default function ShoppingSession() {
               variant="outline"
               className="w-full"
             >
+              <Clipboard className="mr-2 h-4 w-4" />
               Copy Shopping List
             </Button>
             <Button
@@ -300,190 +308,223 @@ export default function ShoppingSession() {
               className="w-full mt-4 bg-blue-300 hover:bg-blue-400 text-blue-900"
             >
               <CheckCircle className="mr-2 h-4 w-4" />
-              Complete Session
+              Complete Session ({itemsInCart} / {totalItems} in cart)
             </Button>
           </nav>
 
+          {/* Search Bar */}
+          <section className="mb-6">
+            <SearchBar
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+            />
+            {searchQuery && (
+              <p className="text-sm text-gray-500 mt-2">
+                Found {filteredActiveItems.length} item
+                {filteredActiveItems.length !== 1 ? 's' : ''}
+              </p>
+            )}
+          </section>
+
           {/* Shopping List by Category */}
-          <section className="space-y-4 sm:space-y-6">
-            {Object.entries(itemsByCategory)
-              .sort()
-              .map(([category, categoryItems]) => {
-                const isExpanded = expandedCategories.has(category);
-                return (
-                  <article
-                    key={category}
-                    className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden"
-                  >
-                    <div
-                      onClick={() => toggleCategory(category)}
-                      className="w-full bg-blue-50 px-4 sm:px-6 py-3 border-b border-blue-100 hover:bg-blue-100 transition-colors text-left cursor-pointer"
+          {filteredActiveItems.length === 0 ? (
+            <section className="text-center py-16 sm:py-20">
+              <div className="text-gray-400 mb-4">
+                <Search className="mx-auto h-16 w-16" />
+              </div>
+              <p className="text-lg text-gray-500 mb-2">No items found</p>
+              <p className="text-sm text-gray-400">
+                Try a different search term
+              </p>
+              <Button
+                onClick={() => setSearchQuery('')}
+                variant="outline"
+                className="mt-4"
+              >
+                Clear search
+              </Button>
+            </section>
+          ) : (
+            <section className="space-y-4 sm:space-y-6">
+              {Object.entries(itemsByCategory)
+                .sort()
+                .map(([category, categoryItems]) => {
+                  const isExpanded = expandedCategories.has(category);
+                  return (
+                    <article
+                      key={category}
+                      className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden"
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 flex-1 min-w-0">
-                          {isExpanded ? (
-                            <ChevronDown className="h-5 w-5 text-blue-500 shrink-0" />
-                          ) : (
-                            <ChevronRight className="h-5 w-5 text-blue-500 shrink-0" />
-                          )}
-                          <div className="min-w-0">
-                            <h3 className="text-lg sm:text-xl font-semibold text-blue-700">
-                              {category}
-                            </h3>
-                            <p className="text-sm text-blue-400">
-                              {
-                                categoryItems.filter((item) =>
-                                  inCartIds.has(item.id!)
-                                ).length
-                              }{' '}
-                              / {categoryItems.length} in cart
-                            </p>
+                      <div
+                        onClick={() => toggleCategory(category)}
+                        className="w-full bg-blue-50 px-4 sm:px-6 py-3 border-b border-blue-100 hover:bg-blue-100 transition-colors text-left cursor-pointer"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            {isExpanded ? (
+                              <ChevronDown className="h-5 w-5 text-blue-500 shrink-0" />
+                            ) : (
+                              <ChevronRight className="h-5 w-5 text-blue-500 shrink-0" />
+                            )}
+                            <div className="min-w-0">
+                              <h3 className="text-lg sm:text-xl font-semibold text-blue-700">
+                                {category}
+                              </h3>
+                              <p className="text-sm text-blue-400">
+                                {
+                                  categoryItems.filter((item) =>
+                                    inCartIds.has(item.id!)
+                                  ).length
+                                }{' '}
+                                / {categoryItems.length} in cart
+                              </p>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                    {isExpanded && (
-                      <ul className="divide-y divide-gray-50">
-                        {categoryItems.map((item) => {
-                          const isInCart = inCartIds.has(item.id!);
-                          const sessionNote = sessionNotes.get(item.id!);
-                          const isEditingNote = editingNoteId === item.id;
+                      {isExpanded && (
+                        <ul className="divide-y divide-gray-50">
+                          {categoryItems.map((item) => {
+                            const isInCart = inCartIds.has(item.id!);
+                            const sessionNote = sessionNotes.get(item.id!);
+                            const isEditingNote = editingNoteId === item.id;
 
-                          return (
-                            <li
-                              key={item.id}
-                              onClick={() =>
-                                handleToggleInCart(item.id, item.name)
-                              }
-                              className={cn(
-                                'p-4 sm:p-5 transition-all cursor-pointer',
-                                isInCart
-                                  ? 'bg-gray-50'
-                                  : 'bg-white hover:bg-blue-50'
-                              )}
-                            >
-                              {isEditingNote ? (
-                                <div
-                                  className="space-y-3"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <Input
-                                    type="text"
-                                    value={tempNote}
-                                    onChange={(e) =>
-                                      setTempNote(e.target.value)
-                                    }
-                                    placeholder="Add a shopping note..."
-                                    className="text-sm"
-                                    autoFocus
-                                  />
-                                  <div className="flex gap-2">
-                                    <Button
-                                      onClick={() => handleSaveNote(item.id)}
-                                      size="sm"
-                                      className="bg-green-400 hover:bg-green-500 text-white"
-                                      disabled={isLoading}
-                                    >
-                                      {isLoading ? (
-                                        <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                                      ) : (
-                                        <Save className="mr-1 h-3 w-3" />
-                                      )}
-                                      Save
-                                    </Button>
-                                    <Button
-                                      onClick={handleCancelNote}
-                                      size="sm"
-                                      variant="secondary"
-                                      className="bg-gray-100 hover:bg-gray-200"
-                                    >
-                                      <X className="mr-1 h-3 w-3" />
-                                      Cancel
-                                    </Button>
-                                  </div>
-                                </div>
-                              ) : (
-                                <div className="flex items-start gap-3">
-                                  <Checkbox
-                                    checked={isInCart}
-                                    onCheckedChange={() =>
-                                      handleToggleInCart(item.id, item.name)
-                                    }
-                                    className="shrink-0 mt-0.5"
-                                    onClick={(e) => e.stopPropagation()}
-                                  />
-                                  <div className="flex-1 min-w-0 cursor-pointer">
-                                    <span
-                                      className={cn(
-                                        'text-base sm:text-lg block transition-all',
-                                        isInCart
-                                          ? 'line-through text-gray-400'
-                                          : 'text-gray-700'
-                                      )}
-                                    >
-                                      {item.name}
-                                    </span>
-                                    {sessionNote && (
-                                      <div className="mt-1.5 flex items-start gap-1">
-                                        <span className="text-xs text-gray-400">
-                                          📝
-                                        </span>
-                                        <span
-                                          className={cn(
-                                            'text-sm transition-all',
-                                            isInCart
-                                              ? 'line-through text-gray-400'
-                                              : 'text-gray-500'
-                                          )}
-                                        >
-                                          {sessionNote}
-                                        </span>
-                                      </div>
-                                    )}
-                                  </div>
+                            return (
+                              <li
+                                key={item.id}
+                                onClick={() =>
+                                  handleToggleInCart(item.id, item.name)
+                                }
+                                className={cn(
+                                  'p-4 sm:p-5 transition-all cursor-pointer',
+                                  isInCart
+                                    ? 'bg-gray-50'
+                                    : 'bg-white hover:bg-blue-50'
+                                )}
+                              >
+                                {isEditingNote ? (
                                   <div
-                                    className="flex gap-2 shrink-0"
+                                    className="space-y-3"
                                     onClick={(e) => e.stopPropagation()}
                                   >
-                                    <Button
-                                      onClick={() => handleAddNote(item.id)}
-                                      variant="secondary"
-                                      size="sm"
-                                      className={cn(
-                                        'border-0',
-                                        sessionNote
-                                          ? 'bg-blue-100 hover:bg-blue-200 text-blue-700'
-                                          : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                                      )}
-                                    >
-                                      {sessionNote ? (
-                                        <>
-                                          <NotebookPen className="h-3 w-3" />
-                                          <span className="ml-1 hidden sm:inline">
-                                            Edit Note
-                                          </span>
-                                        </>
-                                      ) : (
-                                        <>
-                                          <NotebookPen className="h-3 w-3" />
-                                          <span className="ml-1 hidden sm:inline">
-                                            Add Note
-                                          </span>
-                                        </>
-                                      )}
-                                    </Button>
+                                    <Input
+                                      type="text"
+                                      value={tempNote}
+                                      onChange={(e) =>
+                                        setTempNote(e.target.value)
+                                      }
+                                      placeholder="Add a shopping note..."
+                                      className="text-sm"
+                                      autoFocus
+                                    />
+                                    <div className="flex gap-2">
+                                      <Button
+                                        onClick={() => handleSaveNote(item.id)}
+                                        size="sm"
+                                        className="bg-green-400 hover:bg-green-500 text-white"
+                                        disabled={isLoading}
+                                      >
+                                        {isLoading ? (
+                                          <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                                        ) : (
+                                          <Save className="mr-1 h-3 w-3" />
+                                        )}
+                                        Save
+                                      </Button>
+                                      <Button
+                                        onClick={handleCancelNote}
+                                        size="sm"
+                                        variant="secondary"
+                                        className="bg-gray-100 hover:bg-gray-200"
+                                      >
+                                        <X className="mr-1 h-3 w-3" />
+                                        Cancel
+                                      </Button>
+                                    </div>
                                   </div>
-                                </div>
-                              )}
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    )}
-                  </article>
-                );
-              })}
-          </section>
+                                ) : (
+                                  <div className="flex items-start gap-3">
+                                    <Checkbox
+                                      checked={isInCart}
+                                      onCheckedChange={() =>
+                                        handleToggleInCart(item.id, item.name)
+                                      }
+                                      className="shrink-0 mt-0.5"
+                                      onClick={(e) => e.stopPropagation()}
+                                    />
+                                    <div className="flex-1 min-w-0 cursor-pointer">
+                                      <span
+                                        className={cn(
+                                          'text-base sm:text-lg block transition-all',
+                                          isInCart
+                                            ? 'line-through text-gray-400'
+                                            : 'text-gray-700'
+                                        )}
+                                      >
+                                        {item.name}
+                                      </span>
+                                      {sessionNote && (
+                                        <div className="mt-1.5 flex items-start gap-1">
+                                          <span className="text-xs text-gray-400">
+                                            📝
+                                          </span>
+                                          <span
+                                            className={cn(
+                                              'text-sm transition-all',
+                                              isInCart
+                                                ? 'line-through text-gray-400'
+                                                : 'text-gray-500'
+                                            )}
+                                          >
+                                            {sessionNote}
+                                          </span>
+                                        </div>
+                                      )}
+                                    </div>
+                                    <div
+                                      className="flex gap-2 shrink-0"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      <Button
+                                        onClick={() => handleAddNote(item.id)}
+                                        variant="secondary"
+                                        size="sm"
+                                        className={cn(
+                                          'border-0',
+                                          sessionNote
+                                            ? 'bg-blue-100 hover:bg-blue-200 text-blue-700'
+                                            : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                                        )}
+                                      >
+                                        {sessionNote ? (
+                                          <>
+                                            <NotebookPen className="h-3 w-3" />
+                                            <span className="ml-1 hidden sm:inline">
+                                              Edit Note
+                                            </span>
+                                          </>
+                                        ) : (
+                                          <>
+                                            <NotebookPen className="h-3 w-3" />
+                                            <span className="ml-1 hidden sm:inline">
+                                              Add Note
+                                            </span>
+                                          </>
+                                        )}
+                                      </Button>
+                                    </div>
+                                  </div>
+                                )}
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      )}
+                    </article>
+                  );
+                })}
+            </section>
+          )}
 
           {/* Shopping List Preview */}
           <aside
