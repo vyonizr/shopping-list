@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type Item } from '../db/schema';
 import { toast } from 'sonner';
@@ -41,6 +41,7 @@ export default function ShoppingSession() {
   const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
   const [tempNote, setTempNote] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const copyTextRef = useRef<HTMLDivElement>(null);
 
   // Query only active items (selected for shopping)
   const activeItems =
@@ -233,6 +234,10 @@ export default function ShoppingSession() {
     setTempNote('');
   };
 
+  const scrollToCopyText = () => {
+    copyTextRef.current?.scrollIntoView({ behavior: 'auto' });
+  };
+
   return (
     <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-20 sm:pb-8">
       <header className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6 sm:mb-8">
@@ -283,9 +288,16 @@ export default function ShoppingSession() {
           {/* Action Buttons */}
           <nav className="mb-6">
             <Button
+              onClick={scrollToCopyText}
+              variant="outline"
+              className="w-full"
+            >
+              Copy Shopping List
+            </Button>
+            <Button
               onClick={handleCompleteSession}
               variant="default"
-              className="w-full bg-blue-300 hover:bg-blue-400 text-blue-900"
+              className="w-full mt-4 bg-blue-300 hover:bg-blue-400 text-blue-900"
             >
               <CheckCircle className="mr-2 h-4 w-4" />
               Complete Session
@@ -474,7 +486,10 @@ export default function ShoppingSession() {
           </section>
 
           {/* Shopping List Preview */}
-          <aside className="mt-6 sm:mt-8 bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
+          <aside
+            ref={copyTextRef}
+            className="mt-6 sm:mt-8 bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100"
+          >
             <div className="flex items-center justify-between mb-3 sm:mb-4">
               <h3 className="text-lg font-semibold flex items-center gap-2 text-gray-700">
                 <span>📋</span>
