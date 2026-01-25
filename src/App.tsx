@@ -14,7 +14,7 @@ function App() {
           <Route path="/" element={<EverydayItems />} />
           <Route path="/shop" element={<ShoppingSession />} />
         </Routes>
-        <footer className="px-4 py-6 text-center text-sm text-gray-500">
+        <footer className="px-4 py-6 pb-20 sm:pb-6 text-center text-sm text-gray-500">
           © {new Date().getFullYear()} vyonizr · v{packageJson.version}
         </footer>
         <Toaster
