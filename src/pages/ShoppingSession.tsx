@@ -27,6 +27,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
+import BackToTop from '@/components/modules/BackToTop';
 
 export default function ShoppingSession() {
   const [inCartIds, setInCartIds] = useState<Set<number>>(new Set());
@@ -521,6 +522,8 @@ export default function ShoppingSession() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <BackToTop />
     </main>
   );
 }

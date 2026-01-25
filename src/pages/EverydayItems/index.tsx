@@ -14,6 +14,7 @@ import AddItemForm from './components/AddItemForm';
 import CategoryGroup from './components/CategoryGroup';
 import { ExportDialog, ImportDialog } from './components/BackupDialogs';
 import DevelopmentWarning from '@/components/modules/DevelopmentWarning';
+import BackToTop from '@/components/modules/BackToTop';
 import {
   DeleteItemDialog,
   DeleteAllDialog,
@@ -699,6 +700,8 @@ export default function EverydayItems() {
         onCancel={() => setCSVFile(null)}
         isLoading={isBulkOperationLoading}
       />
+
+      <BackToTop />
     </main>
   );
 }
