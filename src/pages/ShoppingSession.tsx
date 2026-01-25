@@ -33,6 +33,8 @@ export default function ShoppingSession() {
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
     new Set()
   );
+  const [hasInitializedCategories, setHasInitializedCategories] =
+    useState(false);
   const [completeSessionDialogOpen, setCompleteSessionDialogOpen] =
     useState(false);
   const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
@@ -76,13 +78,11 @@ export default function ShoppingSession() {
 
   // Initialize all categories as expanded on first render
   useEffect(() => {
-    if (
-      expandedCategories.size === 0 &&
-      Object.keys(itemsByCategory).length > 0
-    ) {
+    if (!hasInitializedCategories && Object.keys(itemsByCategory).length > 0) {
       setExpandedCategories(new Set(Object.keys(itemsByCategory)));
+      setHasInitializedCategories(true);
     }
-  }, [itemsByCategory, expandedCategories.size]);
+  }, [itemsByCategory, hasInitializedCategories]);
 
   const toggleCategory = (category: string) => {
     setExpandedCategories((prev) => {
@@ -304,7 +304,7 @@ export default function ShoppingSession() {
                   >
                     <div
                       onClick={() => toggleCategory(category)}
-                      className="w-full bg-blue-50 px-4 sm:px-6 py-3 border-b border-blue-100 hover:bg-blue-100 transition-colors text-left"
+                      className="w-full bg-blue-50 px-4 sm:px-6 py-3 border-b border-blue-100 hover:bg-blue-100 transition-colors text-left cursor-pointer"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -339,8 +339,11 @@ export default function ShoppingSession() {
                           return (
                             <li
                               key={item.id}
+                              onClick={() =>
+                                handleToggleInCart(item.id, item.name)
+                              }
                               className={cn(
-                                'p-4 sm:p-5 transition-all',
+                                'p-4 sm:p-5 transition-all cursor-pointer',
                                 isInCart
                                   ? 'bg-gray-50'
                                   : 'bg-white hover:bg-blue-50'
