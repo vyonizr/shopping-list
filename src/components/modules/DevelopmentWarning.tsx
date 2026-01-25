@@ -10,7 +10,7 @@ export default function DevelopmentWarning() {
             Development Notice
           </h3>
           <p className="text-sm text-amber-800">
-            This app is in development. Please back up your data regularly using
+            Please back up your list regularly using
             the Export feature on Tools menu.
           </p>
         </div>
