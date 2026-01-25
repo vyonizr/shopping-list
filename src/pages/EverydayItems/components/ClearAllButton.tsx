@@ -1,12 +1,15 @@
-import { Button } from "@/components/ui/button";
-import { Loader2, Square } from "lucide-react";
+import { Button } from '@/components/ui/button';
+import { Loader2, Square } from 'lucide-react';
 
 interface ClearAllButtonProps {
   handleClearAll: () => void;
   isBulkOperationLoading: boolean;
 }
 
-const ClearAllButton = ({ handleClearAll, isBulkOperationLoading }: ClearAllButtonProps) => (
+const ClearAllButton = ({
+  handleClearAll,
+  isBulkOperationLoading,
+}: ClearAllButtonProps) => (
   <Button
     onClick={handleClearAll}
     variant="outline"

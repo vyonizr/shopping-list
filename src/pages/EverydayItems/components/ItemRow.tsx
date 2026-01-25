@@ -182,7 +182,7 @@ export default function ItemRow({
               variant="secondary"
               size="sm"
               className="bg-gray-100 hover:bg-gray-200 text-gray-700 border-0"
-                data-testid={`edit-item-button-${item.id}`}
+              data-testid={`edit-item-button-${item.id}`}
             >
               <Edit2 className="h-4 w-4" />
             </Button>
@@ -191,7 +191,7 @@ export default function ItemRow({
               variant="destructive"
               size="sm"
               className="bg-rose-200 hover:bg-rose-300 text-rose-700"
-                data-testid={`delete-item-button-${item.id}`}
+              data-testid={`delete-item-button-${item.id}`}
             >
               <Trash2 className="h-4 w-4" />
             </Button>

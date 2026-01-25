@@ -3,7 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db, type Item } from '../../db/schema';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { Search, Loader2 } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { compressData, decompressData } from '@/utils/compression';
 import EmptyList from '@/components/modules/EmptyList';
 import SearchBar from '@/components/modules/SearchBar';
@@ -14,6 +14,7 @@ import AddItemForm from './components/AddItemForm';
 import CategoryGroup from './components/CategoryGroup';
 import { ExportDialog, ImportDialog } from './components/BackupDialogs';
 import DevelopmentWarning from '@/components/modules/DevelopmentWarning';
+import BackToTop from '@/components/modules/BackToTop';
 import {
   DeleteItemDialog,
   DeleteAllDialog,
@@ -22,13 +23,21 @@ import {
 import { RenameCategoryDialog } from './components/RenameCategoryDialog';
 import { ImportCSVDialog } from './components/ImportCSVDialog';
 import ClearAllButton from './components/ClearAllButton';
+import Loading from './components/Loading';
+import {
+  DEFAULT_CATEGORY,
+  EXPORT_VERSION,
+  TOAST_MESSAGES,
+  CSV_TEMPLATE_FILENAME,
+} from '@/lib/constants';
 
 export default function EverydayItems() {
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
     new Set()
   );
-  const [hasInitializedCategories, setHasInitializedCategories] = useState(false);
+  const [hasInitializedCategories, setHasInitializedCategories] =
+    useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<number | undefined>(
     undefined
@@ -56,9 +65,7 @@ export default function EverydayItems() {
   // Get unique categories for dropdown
   const categoriesQuery = useLiveQuery(async () => {
     const allItems = await db.items.toArray();
-    const uniqueCategories = [
-      ...new Set(allItems.map((item) => item.category)),
-    ]
+    const uniqueCategories = [...new Set(allItems.map((item) => item.category))]
       .filter(Boolean)
       .sort();
     return uniqueCategories;
@@ -89,7 +96,7 @@ export default function EverydayItems() {
   // Group items by category
   const itemsByCategory = filteredItems.reduce(
     (acc, item) => {
-      const category = item.category || 'Uncategorized';
+      const category = item.category || DEFAULT_CATEGORY;
       if (!acc[category]) {
         acc[category] = [];
       }
@@ -158,7 +165,7 @@ export default function EverydayItems() {
           }
         }, 0);
       } catch (error) {
-        toast.error('Failed to update item');
+        toast.error(TOAST_MESSAGES.ITEM_FAILED_UPDATE);
         console.error('Toggle Active Error:', error);
       }
     }
@@ -190,7 +197,7 @@ export default function EverydayItems() {
         name: name,
         category: category,
       });
-      toast.success('Item updated successfully');
+      toast.success(TOAST_MESSAGES.ITEM_UPDATED);
     } finally {
       setIsLoading(false);
     }
@@ -210,7 +217,7 @@ export default function EverydayItems() {
         await db.items.delete(itemToDelete);
         setDeleteDialogOpen(false);
         setItemToDelete(undefined);
-        toast.success('Item deleted successfully');
+        toast.success(TOAST_MESSAGES.ITEM_DELETED);
       } finally {
         setIsLoading(false);
       }
@@ -221,7 +228,7 @@ export default function EverydayItems() {
     try {
       const allItems = await db.items.toArray();
       const exportData = {
-        version: 'SHOPLIST_DB_V1',
+        version: EXPORT_VERSION,
         timestamp: Date.now(),
         itemCount: allItems.length,
         items: allItems.map((item) => ({
@@ -234,7 +241,7 @@ export default function EverydayItems() {
 
       const jsonString = JSON.stringify(exportData);
       const compressed = await compressData(jsonString);
-      const exportString = `SHOPLIST_DB_V1_GZIP:${compressed}`;
+      const exportString = `${EXPORT_VERSION}:${compressed}`;
 
       setExportedData(exportString);
       setExportDialogOpen(true);
@@ -268,7 +275,7 @@ export default function EverydayItems() {
       // Parse the import string
       const [version, base64Data] = importData.trim().split(':');
 
-      if (version !== 'SHOPLIST_DB_V1_GZIP') {
+      if (version !== EXPORT_VERSION) {
         toast.error('Invalid or unsupported export format');
         return;
       }
@@ -301,7 +308,7 @@ export default function EverydayItems() {
       setImportData('');
       toast.success(`Successfully imported ${imported} items`);
     } catch (error) {
-      toast.error('Failed to import database. Please check the data format.');
+      toast.error(TOAST_MESSAGES.FAILED_IMPORT_DATABASE);
       console.error('Import Error:', error);
     } finally {
       setIsBulkOperationLoading(false);
@@ -363,7 +370,7 @@ export default function EverydayItems() {
 
       // Check if new category name already exists
       const existingCategory = categories.find(
-        (cat) => cat.toLowerCase() === trimmedNewName.toLowerCase()
+        (category) => category.toLowerCase() === trimmedNewName.toLowerCase()
       );
 
       if (existingCategory) {
@@ -444,7 +451,7 @@ export default function EverydayItems() {
 
   const handleDownloadTemplate = () => {
     const template = generateCSVTemplate();
-    downloadFile(template, 'everyday-items-template.csv');
+    downloadFile(template, CSV_TEMPLATE_FILENAME);
     toast.success('CSV template downloaded');
   };
 
@@ -457,7 +464,7 @@ export default function EverydayItems() {
     const file = e.target.files?.[0];
     if (file) {
       if (!file.name.endsWith('.csv')) {
-        toast.error('Please select a CSV file');
+        toast.error(TOAST_MESSAGES.PLEASE_SELECT_CSV_FILE);
         return;
       }
       setCSVFile(file);
@@ -466,7 +473,7 @@ export default function EverydayItems() {
 
   const confirmImportCSV = async () => {
     if (!csvFile) {
-      toast.error('Please select a CSV file');
+      toast.error(TOAST_MESSAGES.PLEASE_SELECT_CSV_FILE);
       return;
     }
 
@@ -512,9 +519,9 @@ export default function EverydayItems() {
       if (imported > 0) {
         toast.success(
           `Successfully imported ${imported} item${imported !== 1 ? 's' : ''}` +
-          (skipped > 0
-            ? ` (${skipped} duplicate${skipped !== 1 ? 's' : ''} skipped)`
-            : '')
+            (skipped > 0
+              ? ` (${skipped} duplicate${skipped !== 1 ? 's' : ''} skipped)`
+              : '')
         );
       } else if (skipped > 0) {
         toast.info(`All ${skipped} items already exist (duplicates skipped)`);
@@ -562,54 +569,48 @@ export default function EverydayItems() {
 
       {/* Loading State */}
       {isQueryLoading ? (
-        <section className="text-center py-16 sm:py-20">
-          <Loader2 className="mx-auto h-16 w-16 text-gray-400 animate-spin mb-4" />
-          <p className="text-lg text-gray-500">Loading your items...</p>
-        </section>
+        <Loading text={'Loading your items...'} />
       ) : (
         <>
-            {/* Bulk Selection Controls */}
-            {filteredItems.length > 0 && (
-              <div className="flex gap-2 mb-4">
-                <SelectAllButton
-                  onClick={handleSelectAll}
-                  isLoading={isBulkOperationLoading}
-                />
-                <ClearAllButton
-                  handleClearAll={handleClearAll}
-                  isBulkOperationLoading={isBulkOperationLoading}
-                />
-              </div>
-            )}
+          {/* Bulk Selection Controls */}
+          {filteredItems.length > 0 && (
+            <div className="flex gap-2 mb-4">
+              <SelectAllButton
+                onClick={handleSelectAll}
+                isLoading={isBulkOperationLoading}
+              />
+              <ClearAllButton
+                handleClearAll={handleClearAll}
+                isBulkOperationLoading={isBulkOperationLoading}
+              />
+            </div>
+          )}
 
           {/* Bulk Operation Loading Overlay */}
           {isBulkOperationLoading ? (
-            <section className="text-center py-16 sm:py-20">
-              <Loader2 className="mx-auto h-16 w-16 text-blue-500 animate-spin mb-4" />
-              <p className="text-lg text-gray-600">Updating items...</p>
-            </section>
+            <Loading text={'Updating items...'} />
           ) : (
             <>
               {/* Items List Grouped by Category */}
               <section className="space-y-4 sm:space-y-6">
                 {Object.entries(itemsByCategory)
                   .sort()
-                      .map(([category, categoryItems]) => (
-                        <CategoryGroup
-                          key={category}
-                          category={category}
-                          items={categoryItems}
-                          isExpanded={expandedCategories.has(category)}
-                          categories={categories}
-                          onToggleCategory={toggleCategory}
-                          onRenameCategory={handleRenameCategory}
-                          onDeleteCategory={handleDeleteCategory}
-                          onToggleActive={handleToggleActive}
-                          onDeleteItem={handleDelete}
-                          onUpdateItem={handleUpdateItem}
-                          isLoading={isLoading}
-                        />
-                      ))}
+                  .map(([category, categoryItems]) => (
+                    <CategoryGroup
+                      key={category}
+                      category={category}
+                      items={categoryItems}
+                      isExpanded={expandedCategories.has(category)}
+                      categories={categories}
+                      onToggleCategory={toggleCategory}
+                      onRenameCategory={handleRenameCategory}
+                      onDeleteCategory={handleDeleteCategory}
+                      onToggleActive={handleToggleActive}
+                      onDeleteItem={handleDelete}
+                      onUpdateItem={handleUpdateItem}
+                      isLoading={isLoading}
+                    />
+                  ))}
               </section>
 
               {items.length === 0 && <EmptyList />}
@@ -637,7 +638,6 @@ export default function EverydayItems() {
         </>
       )}
 
-      {/* Export Dialog */}
       <ExportDialog
         open={exportDialogOpen}
         onOpenChange={setExportDialogOpen}
@@ -646,7 +646,6 @@ export default function EverydayItems() {
         onClose={() => setExportedData('')}
       />
 
-      {/* Import Dialog */}
       <ImportDialog
         open={importDialogOpen}
         onOpenChange={setImportDialogOpen}
@@ -657,7 +656,6 @@ export default function EverydayItems() {
         isLoading={isBulkOperationLoading}
       />
 
-      {/* Rename Category Dialog */}
       <RenameCategoryDialog
         open={renameCategoryDialogOpen}
         onOpenChange={setRenameCategoryDialogOpen}
@@ -669,7 +667,6 @@ export default function EverydayItems() {
         isLoading={isBulkOperationLoading}
       />
 
-      {/* Delete Category Dialog */}
       <DeleteCategoryDialog
         open={deleteCategoryDialogOpen}
         onOpenChange={setDeleteCategoryDialogOpen}
@@ -679,7 +676,6 @@ export default function EverydayItems() {
         isLoading={isLoading}
       />
 
-      {/* Delete Dialog */}
       <DeleteItemDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
@@ -687,7 +683,6 @@ export default function EverydayItems() {
         isLoading={isLoading}
       />
 
-      {/* Delete All Dialog */}
       <DeleteAllDialog
         open={deleteAllDialogOpen}
         onOpenChange={setDeleteAllDialogOpen}
@@ -696,7 +691,6 @@ export default function EverydayItems() {
         isLoading={isLoading}
       />
 
-      {/* Import CSV Dialog */}
       <ImportCSVDialog
         open={importCSVDialogOpen}
         onOpenChange={setImportCSVDialogOpen}
@@ -706,6 +700,8 @@ export default function EverydayItems() {
         onCancel={() => setCSVFile(null)}
         isLoading={isBulkOperationLoading}
       />
+
+      <BackToTop />
     </main>
   );
 }
