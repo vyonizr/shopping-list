@@ -44,6 +44,7 @@ export default function ShoppingSession() {
   const [tempNote, setTempNote] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [shouldFlashCopyButton, setShouldFlashCopyButton] = useState(false);
   const copyTextRef = useRef<HTMLDivElement>(null);
 
   // Query only active items (selected for shopping)
@@ -182,6 +183,8 @@ export default function ShoppingSession() {
     const text = generateWhatsAppText();
     navigator.clipboard.writeText(text).then(() => {
       toast.success('Shopping list copied to clipboard!');
+      // Stop flash animation when user copies
+      setShouldFlashCopyButton(false);
     });
   };
 
@@ -248,6 +251,8 @@ export default function ShoppingSession() {
 
   const scrollToCopyText = () => {
     copyTextRef.current?.scrollIntoView({ behavior: 'auto' });
+    // Trigger flash animation that continues until Copy is pressed
+    setShouldFlashCopyButton(true);
   };
 
   return (
@@ -540,7 +545,10 @@ export default function ShoppingSession() {
                 onClick={handleCopyToClipboard}
                 variant="default"
                 size="sm"
-                className="bg-green-400 hover:bg-green-500 text-white"
+                className={cn(
+                  'bg-green-400 hover:bg-green-500 text-white transition-all',
+                  shouldFlashCopyButton && 'animate-pulse-outline'
+                )}
               >
                 <Clipboard className="mr-2 h-4 w-4" />
                 Copy
